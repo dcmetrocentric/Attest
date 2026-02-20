@@ -341,8 +341,8 @@
     </div>
   </div>
 
-<script>
 
+<script>
 (function(){
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => Array.from(document.querySelectorAll(s));
@@ -354,8 +354,16 @@
     policies: { techLimit: 200, blockedCats: ["Electronics"] }
   };
   const db = (() => {
-    try { return Object.assign({}, DEFAULT_DB, JSON.parse(localStorage.getItem("attest_db") || "null") || {}); }
-    catch { return JSON.parse(JSON.stringify(DEFAULT_DB)); }
+    try {
+      const stored = JSON.parse(localStorage.getItem("attest_db") || "null") || {};
+      const merged = JSON.parse(JSON.stringify(DEFAULT_DB));
+      merged.tx = Array.isArray(stored.tx) ? stored.tx : merged.tx;
+      merged.approvals = Array.isArray(stored.approvals) ? stored.approvals : merged.approvals;
+      merged.policies = Object.assign({}, merged.policies, stored.policies || {});
+      return merged;
+    } catch {
+      return JSON.parse(JSON.stringify(DEFAULT_DB));
+    }
   })();
   function save(){ localStorage.setItem("attest_db", JSON.stringify(db)); }
 
@@ -386,7 +394,7 @@
   $("#modalClose")?.addEventListener("click", closeModal);
   $("#overlay")?.addEventListener("click",(e)=>{ if(e.target.id==="overlay") closeModal(); });
 
-  // --- role switching (visual only for now, but gates approvals view) ---
+  // --- role switching ---
   let role = "tech";
   function setRole(r){
     role = r;
@@ -394,17 +402,22 @@
     $("#roleMgr")?.classList.toggle("active", r==="manager");
     $("#roleAdmin")?.classList.toggle("active", r==="admin");
     const pill = $("#rolePill"); if(pill) pill.textContent = (r==="tech"?"Technician":r==="manager"?"Manager":"Admin");
-    // show approval badge even if not manager
     renderApprovalBadge();
-    renderCurrentView(); // refresh view with role gating
+    renderCurrentView();
     toast("Role switched", `Now viewing as ${role==="tech"?"Technician":role==="manager"?"Manager":"Admin"}.`);
   }
   $$(".chip").forEach(ch=> ch.addEventListener("click", ()=> setRole(ch.dataset.role)));
 
   // --- navigation / views ---
   let currentView = "dashboard";
-  function setView(v){
+  let payTxId = null;
+  let payTimer = null;
+
+  function setView(v, opts={}){
+    if(currentView==="pay" && v!=="pay") stopPayTimer();
     currentView = v;
+    if(v==="pay" && opts.txId) payTxId = opts.txId;
+
     $$(".navitem").forEach(n=> n.classList.toggle("active", n.dataset.view===v));
     const titles = {
       dashboard: ["Dashboard", "Real-time authorization for decentralized spending."],
@@ -412,7 +425,8 @@
       approvals: ["Approvals", "Review and approve flagged purchases."],
       transactions: ["Transactions", "A live ledger of approved purchases."],
       policies: ["Policies", "Tune limits and rules that drive real-time decisions."],
-      settings: ["Settings", "Demo controls and export tools."]
+      settings: ["Settings", "Demo controls and export tools."],
+      pay: ["Pay", "Approved—complete the payment within the authorization window."]
     };
     $("#viewTitle").textContent = titles[v]?.[0] || "Dashboard";
     $("#viewSub").textContent   = titles[v]?.[1] || "";
@@ -423,13 +437,12 @@
   $("#btnNewPurchaseTop")?.addEventListener("click", ()=> setView("newPurchase"));
   $("#btnNewPurchaseBottom")?.addEventListener("click", ()=> setView("newPurchase"));
 
-  // quick open via Cmd/Ctrl+K (desktop)
   document.addEventListener("keydown",(e)=>{
     const isMac = navigator.platform.toLowerCase().includes("mac");
     if((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); setView("newPurchase"); }
   });
 
-  // --- buttons in header ---
+  // --- header buttons ---
   $("#btnExport")?.addEventListener("click", ()=> exportLedger());
   $("#btnReset")?.addEventListener("click", ()=> { localStorage.removeItem("attest_db"); location.reload(); });
   $("#btnHelp")?.addEventListener("click", ()=> showHelp());
@@ -451,10 +464,12 @@
     if(currentView==="transactions") return renderTransactions(root);
     if(currentView==="policies") return renderPolicies(root);
     if(currentView==="settings") return renderSettings(root);
+    if(currentView==="pay") return renderPay(root, payTxId);
   }
 
   function money(n){ return isFinite(n) ? `$${n.toFixed(2)}` : "$0.00"; }
   function fmtTime(iso){ try { return new Date(iso).toLocaleString(); } catch { return iso; } }
+  function getTx(id){ return db.tx.find(t=>t.id===id) || db.approvals.find(t=>t.id===id) || null; }
 
   // --- dashboard ---
   function renderDashboard(root){
@@ -464,7 +479,7 @@
       <div class="grid">
         <div class="card" style="grid-column: span 4">
           <div class="spark"></div>
-          <h4>Approved transactions</h4>
+          <h4>Transactions</h4>
           <div class="metric">${tx}</div>
           <div class="status"><span class="tag good">Healthy</span><span>Ledger is up to date.</span></div>
         </div>
@@ -478,7 +493,7 @@
           <div class="spark"></div>
           <h4>Technician limit</h4>
           <div class="metric">${money(db.policies.techLimit)}</div>
-          <div class="status"><span class="tag">Policy</span><span>${db.policies.blockedCats.length} restricted categories</span></div>
+          <div class="status"><span class="tag">Policy</span><span>${(db.policies.blockedCats||[]).length} restricted categories</span></div>
         </div>
       </div>
 
@@ -499,7 +514,7 @@
 
   function renderNewPurchase(root){
     const limit = db.policies.techLimit;
-    const blocked = db.policies.blockedCats.join(", ");
+    const blocked = (db.policies.blockedCats||[]).join(", ");
     root.innerHTML = `
       <div class="wizard">
         <div class="steps">
@@ -544,7 +559,7 @@
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2 7.17 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9Zm3 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/></svg>
                 Capture receipt
               </button>
-              <div class="help">Uses your phone camera when opened from Safari / installed Home Screen app. Otherwise it will prompt for a photo.</div>
+              <div class="help">Tip: install on Home Screen (GitHub Pages URL) for best camera behavior.</div>
             </div>
             <div class="previewBox" id="receiptBox">
               <div class="mini">No receipt yet</div>
@@ -570,7 +585,6 @@
       </div>
     `;
 
-    // file input for camera / photos
     const file = document.createElement("input");
     file.type="file";
     file.accept="image/*";
@@ -585,9 +599,8 @@
       const r = new FileReader();
       r.onload = ()=>{
         currentReceiptDataUrl = r.result;
-        const box = $("#receiptBox");
-        box.innerHTML = `<img alt="receipt" src="${currentReceiptDataUrl}">`;
-        toast("Receipt captured","Attached to purchase.");
+        $("#receiptBox").innerHTML = `<img alt="receipt" src="${currentReceiptDataUrl}">`;
+        toast("Receipt attached","Saved with purchase.");
       };
       r.readAsDataURL(f);
     });
@@ -614,27 +627,165 @@
         status: "pending"
       };
 
-      // policy engine
       const reasons = [];
       if(amount > db.policies.techLimit) reasons.push(`Amount exceeds technician limit (${money(db.policies.techLimit)})`);
       if((db.policies.blockedCats||[]).includes(category)) reasons.push(`${category} requires manager approval`);
 
       if(reasons.length===0){
-        tx.status="approved";
+        tx.status="approved_unpaid";
+        tx.approvedAt = new Date().toISOString();
+        tx.payWindowSeconds = 10 * 60;
+        tx.payExpiresAt = new Date(Date.now() + tx.payWindowSeconds*1000).toISOString();
         db.tx.push(tx);
         save();
-        toast("Approved","Auto-approved in real time.");
         renderApprovalBadge();
-        setView("transactions");
+        toast("Approved","Payment window opened.","good");
+        setView("pay", {txId: tx.id});
       } else {
         tx.status="needs_approval";
         tx.reason = reasons.join(" • ");
         db.approvals.push(tx);
         save();
-        toast("Routed","Sent to Approvals.","warn");
         renderApprovalBadge();
+        toast("Routed","Sent to Approvals.","warn");
         setView("approvals");
       }
+    });
+  }
+
+  // --- Pay screen ---
+  function stopPayTimer(){ if(payTimer){ clearInterval(payTimer); payTimer=null; } }
+  function formatCountdown(ms){
+    ms = Math.max(0, ms);
+    const s = Math.floor(ms/1000);
+    const mm = String(Math.floor(s/60)).padStart(2,"0");
+    const ss = String(s%60).padStart(2,"0");
+    return `${mm}:${ss}`;
+  }
+
+  function renderPay(root, txId){
+    const tx = getTx(txId);
+    if(!tx){
+      root.innerHTML = `<div class="card"><h4>Nothing to pay</h4><p>Create a purchase first.</p></div>`;
+      return;
+    }
+
+    const expired = Date.now() > Date.parse(tx.payExpiresAt || 0);
+    const statusTag = tx.status==="paid" ? "good" : expired ? "bad" : "warn";
+
+    root.innerHTML = `
+      <div class="grid">
+        <div class="card" style="grid-column: span 7">
+          <div class="spark"></div>
+          <h4>Approved purchase</h4>
+          <div class="metric">${money(tx.amount)}</div>
+          <p>${tx.merchant} • ${tx.category} • <span class="mono">${tx.job || "—"}</span></p>
+          <div class="spacer"></div>
+
+          <div class="hint">
+            <div class="spark2">⏱️</div>
+            <div>
+              <div><b>Authorization window</b></div>
+              <div class="muted">Complete payment before it closes. (Demo simulates card controls / wallet token unlock.)</div>
+            </div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <div class="ctaRow">
+            <button class="btn primary" id="btnTapPay" ${expired || tx.status==="paid" ? "disabled" : ""}>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>
+              Tap to pay (simulated)
+            </button>
+            <button class="btn" id="btnMarkPaid" ${expired || tx.status==="paid" ? "disabled" : ""}>Mark as paid</button>
+            <button class="btn danger" id="btnDecline" ${expired || tx.status==="paid" ? "disabled" : ""}>Simulate decline</button>
+          </div>
+
+          <div class="spacer"></div>
+          <div class="callout">
+            <h5>What happens in production</h5>
+            <p>After approval, ATTEST opens a <b>just-in-time control</b> (merchant / amount / time window) on a real card token. The next authorization succeeds only within this window.</p>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column: span 5">
+          <h4>Payment status</h4>
+          <div class="status">
+            <span class="tag ${statusTag}">${tx.status}</span>
+            <span class="muted">${tx.status==="paid" ? "Payment recorded." : expired ? "Window expired." : "Awaiting payment."}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="mini">
+            <div><b>Approved</b>: ${fmtTime(tx.approvedAt || tx.time)}</div>
+            <div><b>Expires</b>: ${tx.payExpiresAt ? fmtTime(tx.payExpiresAt) : "—"}</div>
+            <div><b>Countdown</b>: <span class="mono" id="countdown">--:--</span></div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <div class="receiptPreview">
+            <div class="previewBox" style="width:100%;height:220px" id="payReceiptBox">
+              ${tx.receipt ? `<img alt="receipt" src="${tx.receipt}">` : `<div class="mini">No receipt attached</div>`}
+            </div>
+          </div>
+
+          <div class="spacer"></div>
+          <div class="ctaRow">
+            <button class="btn" id="btnBackTx">View transactions</button>
+            <button class="btn" id="btnBackDash">Back to dashboard</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    $("#btnBackTx").onclick = ()=> setView("transactions");
+    $("#btnBackDash").onclick = ()=> setView("dashboard");
+
+    stopPayTimer();
+    function tick(){
+      const ms = Date.parse(tx.payExpiresAt || 0) - Date.now();
+      const cd = $("#countdown");
+      if(cd) cd.textContent = formatCountdown(ms);
+      if(ms<=0 && tx.status!=="paid"){
+        tx.status = "expired";
+        save();
+        stopPayTimer();
+        toast("Window expired","Payment not completed in time.","bad");
+        renderPay(root, txId);
+      }
+    }
+    tick();
+    payTimer = setInterval(tick, 250);
+
+    $("#btnTapPay")?.addEventListener("click", ()=>{
+      toast("Wallet opened","Simulating tap…","good");
+      openModal("Tap to Pay (Simulated)",
+        `<div class="hint"><div class="spark2">📲</div><div><b>In production:</b> this triggers token unlock / card control open, then the user completes the tap.</div></div>
+         <div class="spacer"></div>
+         <div class="callout"><h5>Next step</h5><p>Press <b>Mark as paid</b> to record settlement in this demo.</p></div>`,
+        [(()=>{ const b=document.createElement("button"); b.className="btn"; b.textContent="Close"; b.onclick=closeModal; return b; })()]
+      );
+    });
+
+    $("#btnMarkPaid")?.addEventListener("click", ()=>{
+      tx.status = "paid";
+      tx.paidAt = new Date().toISOString();
+      save();
+      stopPayTimer();
+      toast("Paid","Payment recorded successfully.","good");
+      renderPay(root, txId);
+    });
+
+    $("#btnDecline")?.addEventListener("click", ()=>{
+      toast("Declined","Authorization declined (simulated).","bad");
+      openModal("Payment Declined (Simulated)",
+        `<div class="hint"><div class="spark2">🚫</div><div><b>Common causes:</b> mismatch, over limit, window closed, token not unlocked.</div></div>
+         <div class="spacer"></div>
+         <div class="callout"><h5>What ATTEST does</h5><p>Shows a clear reason and routes to Manager when needed.</p></div>`,
+        [(()=>{ const b=document.createElement("button"); b.className="btn"; b.textContent="Close"; b.onclick=closeModal; return b; })()]
+      );
     });
   }
 
@@ -644,7 +795,7 @@
       root.innerHTML = `
         <div class="callout">
           <h5>Manager role required</h5>
-          <p>Switch to <b>Manager</b> to review approvals. (Demo keeps approvals visible to Admin too.)</p>
+          <p>Switch to <b>Manager</b> to review approvals. (Admin can also review in this demo.)</p>
           <div class="spacer"></div>
           <button class="btn" id="goManager">Switch to Manager</button>
         </div>
@@ -723,12 +874,15 @@
     const idx = db.approvals.findIndex(x=>x.id===id);
     if(idx<0) return;
     const a = db.approvals.splice(idx,1)[0];
-    a.status="approved";
+    a.status="approved_unpaid";
+    a.approvedAt = new Date().toISOString();
+    a.payWindowSeconds = 10 * 60;
+    a.payExpiresAt = new Date(Date.now() + a.payWindowSeconds*1000).toISOString();
     db.tx.push(a);
     save();
     renderApprovalBadge();
-    toast("Approved","Purchase approved by manager.");
-    renderCurrentView();
+    toast("Approved","Manager approved. Payment window opened.","good");
+    setView("pay", {txId: a.id});
   }
 
   function reject(id){
@@ -747,11 +901,12 @@
       root.innerHTML = `<div class="card"><h4>No transactions yet</h4><p>Create a purchase to populate the ledger.</p></div>`;
       return;
     }
-    const rows = db.tx.slice().reverse().map(t=>`
+    const rev = db.tx.slice().reverse();
+    const rows = rev.map(t=>`
       <tr>
         <td>${t.merchant}</td>
         <td class="right">${money(t.amount)}</td>
-        <td><span class="tag ${t.status==="approved"?"good":"warn"}">${t.status}</span></td>
+        <td><span class="tag ${t.status==="paid"?"good":t.status==="expired"?"bad":t.status==="approved_unpaid"?"warn":"warn"}">${t.status}</span></td>
         <td class="nowrap">${fmtTime(t.time)}</td>
       </tr>
     `).join("");
@@ -762,11 +917,17 @@
         <tbody>${rows}</tbody>
       </table>
       <div class="spacer"></div>
-      <div class="callout">
-        <h5>Exportable audit trail</h5>
-        <p>Tap the export icon in the top bar to download the ledger JSON.</p>
+      <div class="hint">
+        <div class="spark2">💳</div>
+        <div><b>Tip:</b> Tap a row to open the Pay screen.</div>
       </div>
     `;
+
+    root.querySelectorAll("tbody tr").forEach((tr, idx)=>{
+      const tx = rev[idx];
+      tr.style.cursor = "pointer";
+      tr.addEventListener("click", ()=> setView("pay", {txId: tx.id}));
+    });
   }
 
   // --- policies ---
@@ -844,11 +1005,11 @@
   // --- help / simulate ---
   function showHelp(){
     const body = `
-      <div class="hint"><div class="spark2">👋</div><div><b>How to test:</b> New Purchase → Capture receipt → Submit. Use a large amount or Electronics to trigger Approvals.</div></div>
+      <div class="hint"><div class="spark2">👋</div><div><b>Flow:</b> New Purchase → Capture receipt → Submit → <b>Pay</b>.</div></div>
       <div class="spacer"></div>
-      <div class="hint"><div class="spark2">🎭</div><div><b>Roles:</b> Technician creates purchases, Manager approves, Admin edits policies.</div></div>
+      <div class="hint"><div class="spark2">🛡️</div><div><b>Approvals:</b> Use a big amount or Electronics to route to Manager.</div></div>
       <div class="spacer"></div>
-      <div class="hint"><div class="spark2">📦</div><div><b>Export:</b> Use the export icon (top right) to download the audit ledger.</div></div>
+      <div class="hint"><div class="spark2">💳</div><div><b>Pay screen:</b> Simulates wallet tap + “Mark as paid” for settlement.</div></div>
     `;
     const close = document.createElement("button");
     close.className="btn";
@@ -860,8 +1021,8 @@
   function simulatePolicyBlock(){
     const body = `
       <div class="callout">
-        <h5>Simulate a blocked purchase</h5>
-        <p>This will create a flagged purchase that routes to Approvals.</p>
+        <h5>Simulate a flagged purchase</h5>
+        <p>This will create a purchase that routes to Approvals.</p>
       </div>
     `;
     const go = document.createElement("button");
@@ -890,14 +1051,13 @@
     openModal("Policy test", body, [cancel, go]);
   }
 
-  // init pills
   $("#orgPillText") && ($("#orgPillText").textContent = $("#orgName")?.textContent || "Northstar Facilities");
 
   renderApprovalBadge();
-  setRole("tech"); // sets + renders current view
+  setRole("tech");
   setView("dashboard");
 })();
-
 </script>
+
 </body>
 </html>
