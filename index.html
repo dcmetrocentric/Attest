@@ -343,145 +343,560 @@
 
 <script>
 
-<script>
 (function(){
-const $ = s=>document.querySelector(s);
-const $$ = s=>Array.from(document.querySelectorAll(s));
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
 
-const db = JSON.parse(localStorage.getItem("attest_db")||'{"tx":[],"approvals":[],"policies":{"techLimit":200,"blockedCats":["Electronics"]}}');
-function save(){localStorage.setItem("attest_db",JSON.stringify(db));}
-
-function toast(title,msg,type="good"){
- const t=$("#toast"); $("#toastTitle").textContent=title; $("#toastMsg").textContent=msg;
- $("#toastIcon").className="ticon "+type; t.classList.add("show");
- setTimeout(()=>t.classList.remove("show"),3000);
-}
-$("#toastClose")?.addEventListener("click",()=>$("#toast").classList.remove("show"));
-
-function setView(v){
- $$(".navitem").forEach(n=>n.classList.toggle("active",n.dataset.view===v));
- $("#viewTitle").textContent={dashboard:"Dashboard",newPurchase:"New Purchase",approvals:"Approvals",transactions:"Transactions",policies:"Policies",settings:"Settings"}[v]||"Dashboard";
- const root=$("#viewRoot"); root.innerHTML="";
- if(v==="dashboard") renderDashboard();
- if(v==="newPurchase") renderNew();
- if(v==="approvals") renderApprovals();
- if(v==="transactions") renderTx();
- if(v==="policies") renderPolicies();
-}
-$$(".navitem").forEach(n=>n.addEventListener("click",()=>setView(n.dataset.view)));
-$("#btnNewPurchaseTop")?.addEventListener("click",()=>setView("newPurchase"));
-$("#btnNewPurchaseBottom")?.addEventListener("click",()=>setView("newPurchase"));
-
-function renderDashboard(){
- const root=$("#viewRoot");
- root.innerHTML=`<div class="grid">
- <div class="card"><h4>Transactions</h4><div class="metric">${db.tx.length}</div></div>
- <div class="card"><h4>Pending Approvals</h4><div class="metric">${db.approvals.length}</div></div>
- </div>`;
-}
-
-let currentReceipt=null;
-function renderNew(){
- const root=$("#viewRoot");
- root.innerHTML=`
- <div class="wizard">
- <div class="card">
- <label>Merchant</label><input id="m" class="field"/>
- <label>Amount</label><input id="a" type="number" class="field"/>
- <label>Category</label>
- <select id="c" class="field">
- <option>Supplies</option><option>Tools</option><option>Food</option><option>Electronics</option>
- </select>
- <div class="spacer"></div>
- <button class="btn" id="cap">Capture Receipt</button>
- <div class="previewBox" id="prev"></div>
- <div class="spacer"></div>
- <button class="btn primary" id="submit">Submit Purchase</button>
- </div></div>`;
-
- const file=document.createElement("input");
- file.type="file"; file.accept="image/*"; file.capture="environment"; file.style.display="none";
- document.body.appendChild(file);
-
- $("#cap").onclick=()=>file.click();
- file.onchange=e=>{
-  const f=e.target.files[0];
-  if(!f)return;
-  const r=new FileReader();
-  r.onload=()=>{currentReceipt=r.result; $("#prev").innerHTML='<img src="'+r.result+'"/>';}
-  r.readAsDataURL(f);
- };
-
- $("#submit").onclick=()=>{
-  const tx={id:Date.now(),merchant:$("#m").value,amount:+$("#a").value,category:$("#c").value,receipt:currentReceipt,time:new Date().toISOString()};
-  const policyCheck=()=>{
-   if(tx.amount>db.policies.techLimit)return{ok:false,reason:"Amount exceeds technician limit"};
-   if(db.policies.blockedCats.includes(tx.category))return{ok:false,reason:"Category requires approval"};
-   return{ok:true};
+  // --- persistent demo storage ---
+  const DEFAULT_DB = {
+    tx: [],
+    approvals: [],
+    policies: { techLimit: 200, blockedCats: ["Electronics"] }
   };
-  const res=policyCheck();
-  if(res.ok){tx.status="approved"; db.tx.push(tx); toast("Approved","Purchase auto-approved");}
-  else{tx.status="pending"; tx.reason=res.reason; db.approvals.push(tx); toast("Routed","Needs manager approval","warn");}
-  save(); setView("dashboard");
- };
-}
+  const db = (() => {
+    try { return Object.assign({}, DEFAULT_DB, JSON.parse(localStorage.getItem("attest_db") || "null") || {}); }
+    catch { return JSON.parse(JSON.stringify(DEFAULT_DB)); }
+  })();
+  function save(){ localStorage.setItem("attest_db", JSON.stringify(db)); }
 
-function renderApprovals(){
- const root=$("#viewRoot");
- if(!db.approvals.length){root.innerHTML='<div class="card">No pending approvals.</div>'; return;}
- db.approvals.forEach(a=>{
-  const div=document.createElement("div");
-  div.className="card";
-  div.innerHTML=`<b>${a.merchant}</b><p>$${a.amount} — ${a.category}</p><p>${a.reason}</p>
-  <button class="btn small" data-ok="${a.id}">Approve</button>
-  <button class="btn small danger" data-no="${a.id}">Reject</button>`;
-  root.appendChild(div);
- });
- root.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>approve(+b.dataset.ok));
- root.querySelectorAll("[data-no]").forEach(b=>b.onclick=()=>reject(+b.dataset.no));
-}
+  // --- toast ---
+  function toast(title, msg, type="good"){
+    const t = $("#toast");
+    if(!t) return;
+    $("#toastTitle").textContent = title;
+    $("#toastMsg").textContent = msg;
+    const icon = $("#toastIcon");
+    if(icon) icon.className = "ticon " + type;
+    t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=>t.classList.remove("show"), 3200);
+  }
+  $("#toastClose")?.addEventListener("click", ()=>$("#toast").classList.remove("show"));
 
-function approve(id){
- const i=db.approvals.findIndex(x=>x.id===id);
- const t=db.approvals.splice(i,1)[0]; t.status="approved"; db.tx.push(t); save(); renderApprovals(); toast("Approved","Manager approved purchase");
-}
-function reject(id){
- db.approvals=db.approvals.filter(x=>x.id!==id); save(); renderApprovals(); toast("Rejected","Purchase rejected","bad");
-}
+  // --- modal helpers ---
+  function openModal(title, bodyHTML, footButtons=[]) {
+    $("#modalTitle").textContent = title;
+    $("#modalBody").innerHTML = bodyHTML;
+    const foot = $("#modalFoot");
+    foot.innerHTML = "";
+    footButtons.forEach(btn => foot.appendChild(btn));
+    $("#overlay").classList.add("show");
+  }
+  function closeModal(){ $("#overlay").classList.remove("show"); }
+  $("#modalClose")?.addEventListener("click", closeModal);
+  $("#overlay")?.addEventListener("click",(e)=>{ if(e.target.id==="overlay") closeModal(); });
 
-function renderTx(){
- const root=$("#viewRoot");
- if(!db.tx.length){root.innerHTML='<div class="card">No transactions yet.</div>';return;}
- let html='<table class="table"><tr><th>Merchant</th><th>Amount</th><th>Status</th><th>Time</th></tr>';
- db.tx.forEach(t=>html+=`<tr><td>${t.merchant}</td><td>$${t.amount}</td><td>${t.status}</td><td>${new Date(t.time).toLocaleString()}</td></tr>`);
- html+='</table>';
- root.innerHTML=html;
-}
+  // --- role switching (visual only for now, but gates approvals view) ---
+  let role = "tech";
+  function setRole(r){
+    role = r;
+    $("#roleTech")?.classList.toggle("active", r==="tech");
+    $("#roleMgr")?.classList.toggle("active", r==="manager");
+    $("#roleAdmin")?.classList.toggle("active", r==="admin");
+    const pill = $("#rolePill"); if(pill) pill.textContent = (r==="tech"?"Technician":r==="manager"?"Manager":"Admin");
+    // show approval badge even if not manager
+    renderApprovalBadge();
+    renderCurrentView(); // refresh view with role gating
+    toast("Role switched", `Now viewing as ${role==="tech"?"Technician":role==="manager"?"Manager":"Admin"}.`);
+  }
+  $$(".chip").forEach(ch=> ch.addEventListener("click", ()=> setRole(ch.dataset.role)));
 
-function renderPolicies(){
- const root=$("#viewRoot");
- root.innerHTML=`<div class="card">
- <label>Technician Limit</label><input id="limit" type="number" class="field" value="${db.policies.techLimit}"/>
- <label>Blocked Category</label><input id="block" class="field" value="${db.policies.blockedCats.join(",")}"/>
- <button class="btn primary" id="savePol">Save</button>
- </div>`;
- $("#savePol").onclick=()=>{
-  db.policies.techLimit=+$("#limit").value;
-  db.policies.blockedCats=$("#block").value.split(",").map(x=>x.trim());
-  save(); toast("Saved","Policy updated");
- };
-}
+  // --- navigation / views ---
+  let currentView = "dashboard";
+  function setView(v){
+    currentView = v;
+    $$(".navitem").forEach(n=> n.classList.toggle("active", n.dataset.view===v));
+    const titles = {
+      dashboard: ["Dashboard", "Real-time authorization for decentralized spending."],
+      newPurchase: ["New Purchase", "Capture intent, attach proof, and route approvals in seconds."],
+      approvals: ["Approvals", "Review and approve flagged purchases."],
+      transactions: ["Transactions", "A live ledger of approved purchases."],
+      policies: ["Policies", "Tune limits and rules that drive real-time decisions."],
+      settings: ["Settings", "Demo controls and export tools."]
+    };
+    $("#viewTitle").textContent = titles[v]?.[0] || "Dashboard";
+    $("#viewSub").textContent   = titles[v]?.[1] || "";
+    renderCurrentView();
+  }
 
-$("#btnExport")?.addEventListener("click",()=>{
- const blob=new Blob([JSON.stringify(db.tx,null,2)],{type:"application/json"});
- const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="attest-ledger.json"; a.click();
-});
+  $$(".navitem").forEach(n=> n.addEventListener("click", ()=> setView(n.dataset.view)));
+  $("#btnNewPurchaseTop")?.addEventListener("click", ()=> setView("newPurchase"));
+  $("#btnNewPurchaseBottom")?.addEventListener("click", ()=> setView("newPurchase"));
 
-$("#btnReset")?.addEventListener("click",()=>{localStorage.removeItem("attest_db"); location.reload();});
+  // quick open via Cmd/Ctrl+K (desktop)
+  document.addEventListener("keydown",(e)=>{
+    const isMac = navigator.platform.toLowerCase().includes("mac");
+    if((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); setView("newPurchase"); }
+  });
 
-setView("dashboard");
+  // --- buttons in header ---
+  $("#btnExport")?.addEventListener("click", ()=> exportLedger());
+  $("#btnReset")?.addEventListener("click", ()=> { localStorage.removeItem("attest_db"); location.reload(); });
+  $("#btnHelp")?.addEventListener("click", ()=> showHelp());
+  $("#btnSimulatePolicy")?.addEventListener("click", ()=> simulatePolicyBlock());
+
+  // --- render helpers ---
+  function renderApprovalBadge(){
+    const c = $("#approvalCount");
+    if(c) c.textContent = String(db.approvals.length);
+  }
+
+  function renderCurrentView(){
+    const root = $("#viewRoot");
+    if(!root) return;
+    root.innerHTML = "";
+    if(currentView==="dashboard") return renderDashboard(root);
+    if(currentView==="newPurchase") return renderNewPurchase(root);
+    if(currentView==="approvals") return renderApprovals(root);
+    if(currentView==="transactions") return renderTransactions(root);
+    if(currentView==="policies") return renderPolicies(root);
+    if(currentView==="settings") return renderSettings(root);
+  }
+
+  function money(n){ return isFinite(n) ? `$${n.toFixed(2)}` : "$0.00"; }
+  function fmtTime(iso){ try { return new Date(iso).toLocaleString(); } catch { return iso; } }
+
+  // --- dashboard ---
+  function renderDashboard(root){
+    const pending = db.approvals.length;
+    const tx = db.tx.length;
+    root.innerHTML = `
+      <div class="grid">
+        <div class="card" style="grid-column: span 4">
+          <div class="spark"></div>
+          <h4>Approved transactions</h4>
+          <div class="metric">${tx}</div>
+          <div class="status"><span class="tag good">Healthy</span><span>Ledger is up to date.</span></div>
+        </div>
+        <div class="card" style="grid-column: span 4">
+          <div class="spark"></div>
+          <h4>Pending approvals</h4>
+          <div class="metric">${pending}</div>
+          <div class="status"><span class="tag ${pending? "warn":"good"}">${pending? "Action needed":"Clear"}</span><span>${pending? "Manager review required.":"No approvals waiting."}</span></div>
+        </div>
+        <div class="card" style="grid-column: span 4">
+          <div class="spark"></div>
+          <h4>Technician limit</h4>
+          <div class="metric">${money(db.policies.techLimit)}</div>
+          <div class="status"><span class="tag">Policy</span><span>${db.policies.blockedCats.length} restricted categories</span></div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="hint">
+        <div class="spark2">⚡</div>
+        <div>
+          <b class="muted">Try it:</b> Create a purchase under ${money(db.policies.techLimit)} to auto-approve, or choose <b>Electronics</b> / a large amount to route to approvals.
+        </div>
+      </div>
+    `;
+    renderApprovalBadge();
+  }
+
+  // --- New purchase ---
+  let currentReceiptDataUrl = null;
+
+  function renderNewPurchase(root){
+    const limit = db.policies.techLimit;
+    const blocked = db.policies.blockedCats.join(", ");
+    root.innerHTML = `
+      <div class="wizard">
+        <div class="steps">
+          <div class="stepdot active"><span class="tag">1</span> Details</div>
+          <div class="stepdot"><span class="tag">2</span> Proof</div>
+          <div class="stepdot"><span class="tag">3</span> Submit</div>
+        </div>
+
+        <div class="card">
+          <div class="formrow">
+            <div>
+              <label>Merchant</label>
+              <input class="field" id="fMerchant" placeholder="Home Depot" autocomplete="off"/>
+            </div>
+            <div>
+              <label>Amount (USD)</label>
+              <input class="field" id="fAmount" type="number" inputmode="decimal" placeholder="47.50"/>
+            </div>
+          </div>
+
+          <div class="formrow" style="margin-top:10px">
+            <div>
+              <label>Category</label>
+              <select class="field" id="fCategory">
+                <option>Supplies</option>
+                <option>Tools</option>
+                <option>Food</option>
+                <option>Electronics</option>
+              </select>
+            </div>
+            <div>
+              <label>Job / Cost Center</label>
+              <input class="field" id="fJob" placeholder="Site 12 • Unit 3B" autocomplete="off"/>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="receiptPreview">
+            <div>
+              <button class="btn" id="btnCapture">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2 7.17 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9Zm3 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/></svg>
+                Capture receipt
+              </button>
+              <div class="help">Uses your phone camera when opened from Safari / installed Home Screen app. Otherwise it will prompt for a photo.</div>
+            </div>
+            <div class="previewBox" id="receiptBox">
+              <div class="mini">No receipt yet</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="split">
+            <div class="mini">
+              <div><b>Policy preview</b></div>
+              <div>Technician limit: <span class="mono">${money(limit)}</span></div>
+              <div>Restricted categories: <span class="mono">${blocked || "None"}</span></div>
+            </div>
+            <div class="ctaRow">
+              <button class="btn primary" id="btnSubmitPurchase">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21 23 12 2 3v7l15 2-15 2v7Z"/></svg>
+                Submit for authorization
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // file input for camera / photos
+    const file = document.createElement("input");
+    file.type="file";
+    file.accept="image/*";
+    file.capture="environment";
+    file.style.display="none";
+    document.body.appendChild(file);
+
+    $("#btnCapture").addEventListener("click", ()=> file.click());
+    file.addEventListener("change", (e)=>{
+      const f = e.target.files?.[0];
+      if(!f) return;
+      const r = new FileReader();
+      r.onload = ()=>{
+        currentReceiptDataUrl = r.result;
+        const box = $("#receiptBox");
+        box.innerHTML = `<img alt="receipt" src="${currentReceiptDataUrl}">`;
+        toast("Receipt captured","Attached to purchase.");
+      };
+      r.readAsDataURL(f);
+    });
+
+    $("#btnSubmitPurchase").addEventListener("click", ()=>{
+      const merchant = $("#fMerchant").value.trim();
+      const amount = Number($("#fAmount").value);
+      const category = $("#fCategory").value;
+      const job = $("#fJob").value.trim();
+
+      if(!merchant || !isFinite(amount) || amount<=0){
+        toast("Missing info","Enter a merchant and a valid amount.","bad");
+        return;
+      }
+
+      const tx = {
+        id: Date.now(),
+        merchant,
+        amount,
+        category,
+        job,
+        receipt: currentReceiptDataUrl,
+        time: new Date().toISOString(),
+        status: "pending"
+      };
+
+      // policy engine
+      const reasons = [];
+      if(amount > db.policies.techLimit) reasons.push(`Amount exceeds technician limit (${money(db.policies.techLimit)})`);
+      if((db.policies.blockedCats||[]).includes(category)) reasons.push(`${category} requires manager approval`);
+
+      if(reasons.length===0){
+        tx.status="approved";
+        db.tx.push(tx);
+        save();
+        toast("Approved","Auto-approved in real time.");
+        renderApprovalBadge();
+        setView("transactions");
+      } else {
+        tx.status="needs_approval";
+        tx.reason = reasons.join(" • ");
+        db.approvals.push(tx);
+        save();
+        toast("Routed","Sent to Approvals.","warn");
+        renderApprovalBadge();
+        setView("approvals");
+      }
+    });
+  }
+
+  // --- approvals ---
+  function renderApprovals(root){
+    if(role!=="manager" && role!=="admin"){
+      root.innerHTML = `
+        <div class="callout">
+          <h5>Manager role required</h5>
+          <p>Switch to <b>Manager</b> to review approvals. (Demo keeps approvals visible to Admin too.)</p>
+          <div class="spacer"></div>
+          <button class="btn" id="goManager">Switch to Manager</button>
+        </div>
+      `;
+      $("#goManager").onclick = ()=> setRole("manager");
+      return;
+    }
+
+    if(db.approvals.length===0){
+      root.innerHTML = `<div class="card"><h4>No approvals waiting</h4><p>Flagged purchases will appear here.</p></div>`;
+      return;
+    }
+
+    db.approvals.slice().reverse().forEach(a=>{
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <div class="split">
+          <div>
+            <h4>${a.merchant}</h4>
+            <p>${money(a.amount)} • ${a.category} • <span class="mono">${a.job || "—"}</span></p>
+            <p><span class="tag warn">Policy</span> ${a.reason}</p>
+          </div>
+          <div class="ctaRow">
+            <button class="btn small" data-view="${a.id}">View</button>
+            <button class="btn small" data-approve="${a.id}">Approve</button>
+            <button class="btn small danger" data-reject="${a.id}">Reject</button>
+          </div>
+        </div>
+      `;
+      root.appendChild(div);
+    });
+
+    root.querySelectorAll("[data-view]").forEach(b=> b.addEventListener("click", ()=> showApproval(+b.dataset.view)));
+    root.querySelectorAll("[data-approve]").forEach(b=> b.addEventListener("click", ()=> approve(+b.dataset.approve)));
+    root.querySelectorAll("[data-reject]").forEach(b=> b.addEventListener("click", ()=> reject(+b.dataset.reject)));
+  }
+
+  function showApproval(id){
+    const a = db.approvals.find(x=>x.id===id);
+    if(!a) return;
+    const receipt = a.receipt ? `<div class="previewBox" style="width:100%;height:260px"><img alt="receipt" src="${a.receipt}"></div>`
+                              : `<div class="previewBox" style="width:100%;height:120px"><div class="mini">No receipt</div></div>`;
+    const body = `
+      <div class="split">
+        <div>
+          <h4 style="margin:0">${a.merchant}</h4>
+          <p class="muted" style="margin:6px 0 0">${money(a.amount)} • ${a.category} • ${fmtTime(a.time)}</p>
+          <div class="spacer"></div>
+          <div class="hint"><div class="spark2">🛡️</div><div><b>Policy flag:</b> ${a.reason}</div></div>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      ${receipt}
+    `;
+
+    const ok = document.createElement("button");
+    ok.className="btn primary";
+    ok.textContent="Approve";
+    ok.onclick = ()=>{ approve(id); closeModal(); };
+
+    const no = document.createElement("button");
+    no.className="btn danger";
+    no.textContent="Reject";
+    no.onclick = ()=>{ reject(id); closeModal(); };
+
+    const close = document.createElement("button");
+    close.className="btn";
+    close.textContent="Close";
+    close.onclick = closeModal;
+
+    openModal("Approval review", body, [close, no, ok]);
+  }
+
+  function approve(id){
+    const idx = db.approvals.findIndex(x=>x.id===id);
+    if(idx<0) return;
+    const a = db.approvals.splice(idx,1)[0];
+    a.status="approved";
+    db.tx.push(a);
+    save();
+    renderApprovalBadge();
+    toast("Approved","Purchase approved by manager.");
+    renderCurrentView();
+  }
+
+  function reject(id){
+    const before = db.approvals.length;
+    db.approvals = db.approvals.filter(x=>x.id!==id);
+    if(db.approvals.length===before) return;
+    save();
+    renderApprovalBadge();
+    toast("Rejected","Purchase rejected.","bad");
+    renderCurrentView();
+  }
+
+  // --- transactions ---
+  function renderTransactions(root){
+    if(db.tx.length===0){
+      root.innerHTML = `<div class="card"><h4>No transactions yet</h4><p>Create a purchase to populate the ledger.</p></div>`;
+      return;
+    }
+    const rows = db.tx.slice().reverse().map(t=>`
+      <tr>
+        <td>${t.merchant}</td>
+        <td class="right">${money(t.amount)}</td>
+        <td><span class="tag ${t.status==="approved"?"good":"warn"}">${t.status}</span></td>
+        <td class="nowrap">${fmtTime(t.time)}</td>
+      </tr>
+    `).join("");
+
+    root.innerHTML = `
+      <table class="table">
+        <thead><tr><th>Merchant</th><th class="right">Amount</th><th>Status</th><th>Time</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="spacer"></div>
+      <div class="callout">
+        <h5>Exportable audit trail</h5>
+        <p>Tap the export icon in the top bar to download the ledger JSON.</p>
+      </div>
+    `;
+  }
+
+  // --- policies ---
+  function renderPolicies(root){
+    if(role!=="admin"){
+      root.innerHTML = `
+        <div class="callout">
+          <h5>Admin role required</h5>
+          <p>Switch to <b>Admin</b> to edit policies in this demo.</p>
+          <div class="spacer"></div>
+          <button class="btn" id="goAdmin">Switch to Admin</button>
+        </div>
+      `;
+      $("#goAdmin").onclick = ()=> setRole("admin");
+      return;
+    }
+
+    root.innerHTML = `
+      <div class="card">
+        <h4>Real-time policy engine</h4>
+        <p>Edit limits and restricted categories. Changes take effect immediately.</p>
+        <div class="divider"></div>
+        <div class="formrow">
+          <div>
+            <label>Technician spending limit</label>
+            <input class="field" id="pLimit" type="number" value="${db.policies.techLimit}"/>
+          </div>
+          <div>
+            <label>Restricted categories (comma-separated)</label>
+            <input class="field" id="pCats" value="${(db.policies.blockedCats||[]).join(", ")}"/>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn primary" id="pSave">Save policy</button>
+      </div>
+    `;
+    $("#pSave").onclick = ()=>{
+      const lim = Number($("#pLimit").value);
+      if(!isFinite(lim) || lim<=0){ toast("Invalid limit","Enter a positive number.","bad"); return; }
+      db.policies.techLimit = lim;
+      db.policies.blockedCats = $("#pCats").value.split(",").map(s=>s.trim()).filter(Boolean);
+      save();
+      toast("Saved","Policy updated.");
+      renderCurrentView();
+    };
+  }
+
+  // --- settings ---
+  function renderSettings(root){
+    root.innerHTML = `
+      <div class="card">
+        <h4>Demo controls</h4>
+        <p>Reset clears local demo data stored on this device.</p>
+        <div class="divider"></div>
+        <button class="btn danger" id="hardReset">Reset demo data</button>
+        <div class="spacer"></div>
+        <button class="btn" id="exportNow">Export ledger</button>
+        <div class="help">Exports approved transactions as JSON for audit / compliance workflows.</div>
+      </div>
+    `;
+    $("#hardReset").onclick = ()=>{ localStorage.removeItem("attest_db"); location.reload(); };
+    $("#exportNow").onclick = ()=> exportLedger();
+  }
+
+  // --- export ---
+  function exportLedger(){
+    const blob = new Blob([JSON.stringify(db.tx, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "attest-ledger.json";
+    a.click();
+    toast("Exported","Ledger downloaded as JSON.");
+  }
+
+  // --- help / simulate ---
+  function showHelp(){
+    const body = `
+      <div class="hint"><div class="spark2">👋</div><div><b>How to test:</b> New Purchase → Capture receipt → Submit. Use a large amount or Electronics to trigger Approvals.</div></div>
+      <div class="spacer"></div>
+      <div class="hint"><div class="spark2">🎭</div><div><b>Roles:</b> Technician creates purchases, Manager approves, Admin edits policies.</div></div>
+      <div class="spacer"></div>
+      <div class="hint"><div class="spark2">📦</div><div><b>Export:</b> Use the export icon (top right) to download the audit ledger.</div></div>
+    `;
+    const close = document.createElement("button");
+    close.className="btn";
+    close.textContent="Close";
+    close.onclick = closeModal;
+    openModal("Quick tour", body, [close]);
+  }
+
+  function simulatePolicyBlock(){
+    const body = `
+      <div class="callout">
+        <h5>Simulate a blocked purchase</h5>
+        <p>This will create a flagged purchase that routes to Approvals.</p>
+      </div>
+    `;
+    const go = document.createElement("button");
+    go.className="btn primary";
+    go.textContent="Create flagged purchase";
+    go.onclick = ()=>{
+      const tx = {
+        id: Date.now(),
+        merchant: "Best Buy",
+        amount: db.policies.techLimit + 50,
+        category: "Electronics",
+        job: "Site 7 • Emergency",
+        receipt: null,
+        time: new Date().toISOString(),
+        status: "needs_approval",
+        reason: `Amount exceeds technician limit (${money(db.policies.techLimit)}) • Electronics requires manager approval`
+      };
+      db.approvals.push(tx); save(); renderApprovalBadge(); closeModal();
+      toast("Created","Flagged purchase added to Approvals.","warn");
+      setView("approvals");
+    };
+    const cancel = document.createElement("button");
+    cancel.className="btn";
+    cancel.textContent="Cancel";
+    cancel.onclick = closeModal;
+    openModal("Policy test", body, [cancel, go]);
+  }
+
+  // init pills
+  $("#orgPillText") && ($("#orgPillText").textContent = $("#orgName")?.textContent || "Northstar Facilities");
+
+  renderApprovalBadge();
+  setRole("tech"); // sets + renders current view
+  setView("dashboard");
 })();
-</script>
 
 </script>
 </body>
