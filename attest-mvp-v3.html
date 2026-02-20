@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>ATTEST — MVP</title>
+  <meta name="theme-color" content="#0B1220"/>
+  <style>
+    :root{
+      --bg:#070B12;
+      --panel:#0B1220;
+      --panel2:#0F1A2E;
+      --text:#E7ECF6;
+      --muted:#A7B2C8;
+      --muted2:#7F8AA3;
+      --brand:#2FE6C6;
+      --brand2:#6AA6FF;
+      --warn:#FFB020;
+      --bad:#FF4D6D;
+      --good:#2FE6C6;
+      --line:rgba(255,255,255,.09);
+      --shadow: 0 14px 40px rgba(0,0,0,.45);
+      --radius:18px;
+      --radius2:14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1100px 900px at 20% -10%, rgba(106,166,255,.20), transparent 55%),
+        radial-gradient(900px 800px at 110% 10%, rgba(47,230,198,.14), transparent 50%),
+        radial-gradient(900px 900px at 35% 120%, rgba(47,230,198,.10), transparent 55%),
+        linear-gradient(180deg, #060A11, #050814 40%, #050711);
+      overflow-x:hidden;
+    }
+    a{color:inherit}
+    button,input,select,textarea{font:inherit}
+    .safe{padding-bottom: max(16px, env(safe-area-inset-bottom));}
+    .app{
+      max-width: 980px;
+      margin: 0 auto;
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+    }
+    .topbar{
+      position:sticky; top:0; z-index:20;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(7,11,18,.85), rgba(7,11,18,.55));
+      border-bottom:1px solid var(--line);
+    }
+    .topbar .inner{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 14px 16px;
+      gap: 10px;
+    }
+    .brandmark{display:flex; align-items:center; gap:10px; min-width: 180px;}
+    .logo{
+      width:36px; height:36px; border-radius:12px;
+      background: radial-gradient(18px 18px at 30% 30%, rgba(255,255,255,.25), transparent 60%),
+                  linear-gradient(135deg, rgba(47,230,198,1), rgba(106,166,255,1));
+      box-shadow: 0 10px 26px rgba(47,230,198,.12), 0 10px 26px rgba(106,166,255,.12);
+      position:relative; overflow:hidden;
+    }
+    .logo:after{
+      content:"";
+      position:absolute; inset:-40%;
+      background: conic-gradient(from 140deg, rgba(255,255,255,.0), rgba(255,255,255,.25), rgba(255,255,255,.0));
+      animation: sweep 6s linear infinite;
+      opacity:.7;
+    }
+    @keyframes sweep{to{transform:rotate(360deg)}}
+    .brandname{display:flex; flex-direction:column; line-height:1.05;}
+    .brandname b{letter-spacing:.22em; font-size:13px}
+    .brandname span{font-size:12px; color:var(--muted)}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px; border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(15,26,46,.55);
+      color:var(--muted);
+      white-space:nowrap;
+      font-size:12px;
+    }
+    .dot{width:8px; height:8px; border-radius:99px; background: var(--good); box-shadow: 0 0 0 4px rgba(47,230,198,.12)}
+    .actions{display:flex; align-items:center; gap:10px}
+    .iconbtn{
+      border:1px solid var(--line);
+      background: rgba(15,26,46,.50);
+      color:var(--text);
+      border-radius: 14px;
+      padding:10px 12px;
+      cursor:pointer;
+      transition:.15s transform ease, .15s background ease, .15s border-color ease;
+    }
+    .iconbtn:hover{transform: translateY(-1px); background: rgba(15,26,46,.78); border-color: rgba(255,255,255,.16)}
+    .icon{width:18px; height:18px; display:inline-block; vertical-align:middle; fill: currentColor; opacity:.92;}
+    .content{display:grid; grid-template-columns: 320px 1fr; gap: 16px; padding: 16px; flex:1;}
+    @media (max-width: 920px){.content{grid-template-columns: 1fr; padding: 14px}.brandmark{min-width: unset}}
+    .nav{border:1px solid var(--line); background: rgba(11,18,32,.62); box-shadow: var(--shadow); border-radius: var(--radius); overflow:hidden;}
+    .navhead{padding:14px 14px 10px; border-bottom:1px solid var(--line); background: linear-gradient(180deg, rgba(106,166,255,.10), rgba(47,230,198,.06));}
+    .orgline{display:flex; align-items:center; justify-content:space-between; gap:10px}
+    .orgline h3{margin:0; font-size:14px; letter-spacing:.02em}
+    .orgline .small{color:var(--muted); font-size:12px}
+    .rolechip{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;}
+    .chip{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid var(--line); background: rgba(15,26,46,.60); font-size:12px; color:var(--muted); cursor:pointer; user-select:none;}
+    .chip.active{border-color: rgba(47,230,198,.45); color: var(--text); box-shadow: 0 0 0 4px rgba(47,230,198,.10);}
+    .navlist{padding: 10px 8px}
+    .navitem{display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius: 14px; cursor:pointer; color: var(--muted); transition:.15s background ease, .15s transform ease, .15s color ease;}
+    .navitem:hover{background: rgba(15,26,46,.55); transform: translateY(-1px); color: var(--text)}
+    .navitem.active{background: rgba(15,26,46,.75); color: var(--text); border:1px solid rgba(255,255,255,.10)}
+    .navitem .badge{margin-left:auto; font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.10); color: var(--muted); background: rgba(0,0,0,.12);}
+    .panel{border:1px solid var(--line); background: rgba(11,18,32,.56); box-shadow: var(--shadow); border-radius: var(--radius); overflow:hidden; position:relative;}
+    .panelhead{padding:16px 16px 12px; border-bottom:1px solid var(--line); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      background:
+        radial-gradient(900px 360px at 10% 0%, rgba(47,230,198,.12), transparent 60%),
+        radial-gradient(820px 420px at 90% 0%, rgba(106,166,255,.14), transparent 65%);}
+    .panelhead h1{margin:0; font-size:18px; letter-spacing:.01em;}
+    .sub{color:var(--muted); font-size:13px; margin-top:4px}
+    .ctaRow{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .btn{border:1px solid rgba(255,255,255,.12); background: rgba(15,26,46,.65); color: var(--text); border-radius: 14px; padding:10px 12px; cursor:pointer; transition:.15s transform ease, .15s background ease, .15s border-color ease; display:inline-flex; align-items:center; gap:10px;}
+    .btn:hover{transform: translateY(-1px); background: rgba(15,26,46,.85); border-color: rgba(255,255,255,.18)}
+    .btn.primary{background: linear-gradient(135deg, rgba(47,230,198,.95), rgba(106,166,255,.92)); color: #061019; border-color: transparent; font-weight: 700; box-shadow: 0 14px 36px rgba(47,230,198,.18), 0 14px 36px rgba(106,166,255,.14);}
+    .btn.primary:hover{filter: brightness(1.03)}
+    .btn.danger{border-color: rgba(255,77,109,.35); background: rgba(255,77,109,.10);}
+    .btn.small{padding:8px 10px; border-radius:12px; font-size:12px}
+    .kbd{font-family:var(--mono); font-size:11px; padding:3px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.15); color: var(--muted);}
+    .panelbody{padding:16px}
+    .grid{display:grid; grid-template-columns: repeat(12, 1fr); gap: 12px;}
+    .card{border:1px solid rgba(255,255,255,.10); background: rgba(15,26,46,.58); border-radius: var(--radius2); padding: 14px; overflow:hidden; position:relative;}
+    .card h4{margin:0 0 6px; font-size:13px; color: var(--text)}
+    .card p{margin:0; color: var(--muted); font-size:12px; line-height:1.45}
+    .metric{font-size: 22px; font-weight: 800; letter-spacing: .01em; margin-top:10px;}
+    .spark{position:absolute; right:-28px; top:-30px; width:140px; height:140px; opacity:.22;
+      background: radial-gradient(circle at 30% 30%, rgba(47,230,198,1), transparent 58%),
+                  radial-gradient(circle at 70% 60%, rgba(106,166,255,1), transparent 60%);
+      filter: blur(1px); border-radius: 999px;}
+    .status{display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); margin-top:10px;}
+    .status b{color:var(--text)}
+    .tag{display:inline-flex; align-items:center; gap:8px; font-size:11px; padding:5px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.12); color: var(--muted);}
+    .tag.good{border-color: rgba(47,230,198,.35); color: #BFF9EE; background: rgba(47,230,198,.10)}
+    .tag.warn{border-color: rgba(255,176,32,.35); color: #FFE2AE; background: rgba(255,176,32,.10)}
+    .tag.bad{border-color: rgba(255,77,109,.35); color: #FFD1DA; background: rgba(255,77,109,.10)}
+    .table{width:100%; border-collapse: collapse; font-size:12px; overflow:hidden; border-radius: 14px; border:1px solid rgba(255,255,255,.10); background: rgba(15,26,46,.44);}
+    .table th, .table td{padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.07); text-align:left; vertical-align:top;}
+    .table th{color: var(--muted); font-weight:600; letter-spacing:.02em; font-size:11px}
+    .table tr:hover td{background: rgba(255,255,255,.03)}
+    .mono{font-family:var(--mono)}
+    .right{text-align:right}
+    .center{text-align:center}
+    .wizard{display:grid; grid-template-columns: 1fr; gap: 12px;}
+    .steps{display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 6px;}
+    .stepdot{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.10); background: rgba(15,26,46,.46); color: var(--muted); font-size:12px;}
+    .stepdot.active{border-color: rgba(47,230,198,.45); color: var(--text); box-shadow: 0 0 0 4px rgba(47,230,198,.10);}
+    .formrow{display:grid; grid-template-columns: 1fr 1fr; gap: 10px;}
+    @media (max-width: 640px){.formrow{grid-template-columns: 1fr}}
+    label{display:block; font-size:11px; color: var(--muted); margin-bottom:6px; letter-spacing:.02em}
+    .field{width:100%; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18); color: var(--text); padding: 11px 12px; border-radius: 14px; outline:none;}
+    .field:focus{border-color: rgba(47,230,198,.40); box-shadow: 0 0 0 4px rgba(47,230,198,.10)}
+    .help{margin-top:8px; font-size:12px; color: var(--muted2); line-height:1.4;}
+    .divider{height:1px; background: rgba(255,255,255,.08); margin: 10px 0;}
+    .receiptPreview{display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;}
+    .previewBox{width: 160px; height: 200px; border:1px dashed rgba(255,255,255,.18); border-radius: 14px; background: rgba(0,0,0,.16); display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;}
+    .previewBox img{width:100%; height:100%; object-fit:cover}
+    .mini{font-size:11px; color:var(--muted); line-height:1.35;}
+    .callout{border:1px solid rgba(255,255,255,.12); background: rgba(15,26,46,.50); border-radius: 14px; padding: 12px;}
+    .callout h5{margin:0 0 6px; font-size:12px; color: var(--text)}
+    .callout p{margin:0; font-size:12px; color: var(--muted); line-height:1.45}
+    .ledgerbox{font-family: var(--mono); font-size: 11px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.20); border-radius: 14px; padding: 10px; color: #D7E0F3; white-space: pre-wrap; overflow:auto; max-height: 220px;}
+    .toast{position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; z-index: 50; width:min(560px, calc(100% - 24px)); border:1px solid rgba(255,255,255,.14); background: rgba(11,18,32,.80); backdrop-filter: blur(12px); border-radius: 16px; box-shadow: 0 18px 60px rgba(0,0,0,.55); padding: 12px; display:none; gap: 10px; align-items:flex-start;}
+    .toast.show{display:flex}
+    .toast .ticon{width:34px; height:34px; border-radius: 14px; display:flex; align-items:center; justify-content:center;}
+    .toast .ticon.good{background: rgba(47,230,198,.14); border:1px solid rgba(47,230,198,.35)}
+    .toast .ticon.warn{background: rgba(255,176,32,.12); border:1px solid rgba(255,176,32,.35)}
+    .toast .ticon.bad{background: rgba(255,77,109,.12); border:1px solid rgba(255,77,109,.35)}
+    .toast b{display:block; font-size:12px}
+    .toast span{display:block; font-size:12px; color: var(--muted); line-height:1.35; margin-top:2px}
+    .toast .tclose{margin-left:auto}
+    .overlay{position:fixed; inset:0; z-index:60; background: rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding: 18px;}
+    .overlay.show{display:flex}
+    .modal{width: min(760px, 100%); border:1px solid rgba(255,255,255,.14); background: rgba(11,18,32,.86); backdrop-filter: blur(16px); border-radius: 18px; box-shadow: 0 22px 80px rgba(0,0,0,.65); overflow:hidden;}
+    .modalhead{padding: 14px 14px 12px; border-bottom:1px solid rgba(255,255,255,.10); display:flex; align-items:center; justify-content:space-between; gap:10px;
+      background:
+        radial-gradient(760px 280px at 10% 0%, rgba(47,230,198,.14), transparent 60%),
+        radial-gradient(760px 280px at 90% 0%, rgba(106,166,255,.16), transparent 65%);}
+    .modalhead h3{margin:0; font-size:14px}
+    .modalbody{padding: 14px}
+    .modalfoot{padding: 12px 14px; border-top:1px solid rgba(255,255,255,.10); display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap}
+    .muted{color:var(--muted)}
+    .tiny{font-size:11px}
+    .nowrap{white-space:nowrap}
+    .spacer{height:10px}
+    .split{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+    .hr{height:1px; background: rgba(255,255,255,.08); margin: 12px 0}
+    .hint{display:flex; gap:10px; align-items:flex-start; padding: 10px 12px; border-radius: 14px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.14); color: var(--muted); font-size:12px;}
+    .hint .spark2{width:26px; height:26px; border-radius: 12px; border:1px solid rgba(47,230,198,.35); background: rgba(47,230,198,.12); display:flex; align-items:center; justify-content:center; flex: 0 0 auto;}
+    .mobileBottomBar{position: sticky; bottom: 0; z-index: 15; border-top:1px solid rgba(255,255,255,.10); background: rgba(7,11,18,.78); backdrop-filter: blur(14px); padding: 10px 12px; display:none; gap:10px; align-items:center; justify-content:space-between;}
+    @media (max-width: 920px){.mobileBottomBar{display:flex}}
+    .seg{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    .seg .pill{padding:7px 10px}
+  </style>
+</head>
+<body>
+  <div class="app safe">
+    <div class="topbar">
+      <div class="inner">
+        <div class="brandmark">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="brandname">
+            <b>ATTEST</b>
+            <span>Intent-verified transactions</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <div class="pill" id="envPill" title="Demo environment status">
+            <span class="dot" id="envDot"></span>
+            <span id="envLabel">Demo mode</span>
+          </div>
+          <button class="iconbtn" id="btnHelp" title="Quick tour">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm1 17h-2v-2h2v2Zm2.07-7.75-.9.92A3.49 3.49 0 0 0 13 15h-2v-.5c0-.83.34-1.63.93-2.22l1.24-1.26A1.99 1.99 0 0 0 12 7a2 2 0 0 0-2 2H8a4 4 0 1 1 7.07 2.25Z"/></svg>
+          </button>
+          <button class="iconbtn" id="btnExport" title="Export audit ledger">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14v-2H5v2Zm7-18L5.33 8.67 6.75 10.1 11 5.85V16h2V5.85l4.25 4.25 1.42-1.43L12 2Z"/></svg>
+          </button>
+          <button class="iconbtn" id="btnReset" title="Reset demo data">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5a5 5 0 0 1-9.9 1H5.02a7 7 0 0 0 13.98-1c0-3.87-3.13-7-7-7Z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <aside class="nav">
+        <div class="navhead">
+          <div class="orgline">
+            <div>
+              <h3 id="orgName">Northstar Facilities</h3>
+              <div class="small" id="orgSub">3 job sites • 28 technicians</div>
+            </div>
+            <div class="tag good" id="policyHealth">Policy: Healthy</div>
+          </div>
+          <div class="rolechip">
+            <div class="chip active" data-role="tech" id="roleTech">Technician</div>
+            <div class="chip" data-role="manager" id="roleMgr">Manager</div>
+            <div class="chip" data-role="admin" id="roleAdmin">Admin</div>
+          </div>
+        </div>
+
+        <div class="navlist">
+          <div class="navitem active" data-view="dashboard">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/></svg>
+            <span>Dashboard</span>
+          </div>
+          <div class="navitem" data-view="newPurchase">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2Z"/></svg>
+            <span>New purchase</span>
+            <span class="badge" id="quickBadge">⌘K</span>
+          </div>
+          <div class="navitem" data-view="approvals" id="navApprovals">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11H7v2h2v-2Zm0-4H7v2h2V7Zm0 8H7v2h2v-2Zm4-8h4v2h-4V7Zm0 4h4v2h-4v-2Zm0 4h4v2h-4v-2ZM5 3h14a2 2 0 0 1 2 2v16l-4-3H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg>
+            <span>Approvals</span>
+            <span class="badge" id="approvalCount">0</span>
+          </div>
+          <div class="navitem" data-view="transactions">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v2H3V7Zm0 8h18v2H3v-2Zm0-4h12v2H3v-2Z"/></svg>
+            <span>Transactions</span>
+          </div>
+          <div class="navitem" data-view="policies">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.74 8 11 4.6-1.26 8-6 8-11V5l-8-3Zm-1 15-4-4 1.4-1.4L11 14.2l4.6-4.6L17 11l-6 6Z"/></svg>
+            <span>Policies</span>
+          </div>
+          <div class="navitem" data-view="settings">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.2 7.2 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 14.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L1.71 7.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L1.83 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.51.4 1.05.71 1.63.94l.36 2.54c.04.24.25.42.49.42h3.8c.24 0 .45-.18.49-.42l.36-2.54c.58-.23 1.12-.54 1.63-.94l2.39.96c.22.09.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg>
+            <span>Settings</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="panel" id="mainPanel">
+        <div class="panelhead">
+          <div>
+            <h1 id="viewTitle">Dashboard</h1>
+            <div class="sub" id="viewSub">Real-time authorization for decentralized spending.</div>
+          </div>
+          <div class="ctaRow">
+            <button class="btn primary" id="btnNewPurchaseTop">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2Z"/></svg>
+              New purchase
+              <span class="kbd">⌘K</span>
+            </button>
+            <button class="btn" id="btnSimulatePolicy">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2 2 0 0 1-2-2H7a2 2 0 0 1-2-2V9.5A6.5 6.5 0 0 1 18.5 9.5V18a2 2 0 0 1-2 2h-2a2 2 0 0 1-2 2Zm-5-4h10v-8.5a5 5 0 0 0-10 0V18Zm4-3h2v2h-2v-2Z"/></svg>
+              Test a policy block
+            </button>
+          </div>
+        </div>
+
+        <div class="panelbody" id="viewRoot"></div>
+
+        <div class="mobileBottomBar">
+          <div class="seg">
+            <span class="pill"><span class="dot"></span><span id="rolePill">Technician</span></span>
+            <span class="pill" id="orgPill"><span style="opacity:.9">🏢</span><span id="orgPillText">Northstar Facilities</span></span>
+          </div>
+          <button class="btn primary" id="btnNewPurchaseBottom">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2Z"/></svg>
+            Purchase
+          </button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div class="ticon good" id="toastIcon">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>
+    </div>
+    <div>
+      <b id="toastTitle">Saved</b>
+      <span id="toastMsg">Your changes were applied.</span>
+    </div>
+    <button class="btn small tclose" id="toastClose">Close</button>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modalhead">
+        <h3 id="modalTitle">Modal</h3>
+        <button class="iconbtn" id="modalClose" aria-label="Close">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L12 13.41 5.11 19.71 3.7 18.29 10.59 12 3.7 5.71 5.11 4.29 12 10.59l6.89-6.3 1.42 1.42Z"/></svg>
+        </button>
+      </div>
+      <div class="modalbody" id="modalBody"></div>
+      <div class="modalfoot" id="modalFoot"></div>
+    </div>
+  </div>
+
+<script>
+
+<script>
+(function(){
+const $ = s=>document.querySelector(s);
+const $$ = s=>Array.from(document.querySelectorAll(s));
+
+const db = JSON.parse(localStorage.getItem("attest_db")||'{"tx":[],"approvals":[],"policies":{"techLimit":200,"blockedCats":["Electronics"]}}');
+function save(){localStorage.setItem("attest_db",JSON.stringify(db));}
+
+function toast(title,msg,type="good"){
+ const t=$("#toast"); $("#toastTitle").textContent=title; $("#toastMsg").textContent=msg;
+ $("#toastIcon").className="ticon "+type; t.classList.add("show");
+ setTimeout(()=>t.classList.remove("show"),3000);
+}
+$("#toastClose")?.addEventListener("click",()=>$("#toast").classList.remove("show"));
+
+function setView(v){
+ $$(".navitem").forEach(n=>n.classList.toggle("active",n.dataset.view===v));
+ $("#viewTitle").textContent={dashboard:"Dashboard",newPurchase:"New Purchase",approvals:"Approvals",transactions:"Transactions",policies:"Policies",settings:"Settings"}[v]||"Dashboard";
+ const root=$("#viewRoot"); root.innerHTML="";
+ if(v==="dashboard") renderDashboard();
+ if(v==="newPurchase") renderNew();
+ if(v==="approvals") renderApprovals();
+ if(v==="transactions") renderTx();
+ if(v==="policies") renderPolicies();
+}
+$$(".navitem").forEach(n=>n.addEventListener("click",()=>setView(n.dataset.view)));
+$("#btnNewPurchaseTop")?.addEventListener("click",()=>setView("newPurchase"));
+$("#btnNewPurchaseBottom")?.addEventListener("click",()=>setView("newPurchase"));
+
+function renderDashboard(){
+ const root=$("#viewRoot");
+ root.innerHTML=`<div class="grid">
+ <div class="card"><h4>Transactions</h4><div class="metric">${db.tx.length}</div></div>
+ <div class="card"><h4>Pending Approvals</h4><div class="metric">${db.approvals.length}</div></div>
+ </div>`;
+}
+
+let currentReceipt=null;
+function renderNew(){
+ const root=$("#viewRoot");
+ root.innerHTML=`
+ <div class="wizard">
+ <div class="card">
+ <label>Merchant</label><input id="m" class="field"/>
+ <label>Amount</label><input id="a" type="number" class="field"/>
+ <label>Category</label>
+ <select id="c" class="field">
+ <option>Supplies</option><option>Tools</option><option>Food</option><option>Electronics</option>
+ </select>
+ <div class="spacer"></div>
+ <button class="btn" id="cap">Capture Receipt</button>
+ <div class="previewBox" id="prev"></div>
+ <div class="spacer"></div>
+ <button class="btn primary" id="submit">Submit Purchase</button>
+ </div></div>`;
+
+ const file=document.createElement("input");
+ file.type="file"; file.accept="image/*"; file.capture="environment"; file.style.display="none";
+ document.body.appendChild(file);
+
+ $("#cap").onclick=()=>file.click();
+ file.onchange=e=>{
+  const f=e.target.files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{currentReceipt=r.result; $("#prev").innerHTML='<img src="'+r.result+'"/>';}
+  r.readAsDataURL(f);
+ };
+
+ $("#submit").onclick=()=>{
+  const tx={id:Date.now(),merchant:$("#m").value,amount:+$("#a").value,category:$("#c").value,receipt:currentReceipt,time:new Date().toISOString()};
+  const policyCheck=()=>{
+   if(tx.amount>db.policies.techLimit)return{ok:false,reason:"Amount exceeds technician limit"};
+   if(db.policies.blockedCats.includes(tx.category))return{ok:false,reason:"Category requires approval"};
+   return{ok:true};
+  };
+  const res=policyCheck();
+  if(res.ok){tx.status="approved"; db.tx.push(tx); toast("Approved","Purchase auto-approved");}
+  else{tx.status="pending"; tx.reason=res.reason; db.approvals.push(tx); toast("Routed","Needs manager approval","warn");}
+  save(); setView("dashboard");
+ };
+}
+
+function renderApprovals(){
+ const root=$("#viewRoot");
+ if(!db.approvals.length){root.innerHTML='<div class="card">No pending approvals.</div>'; return;}
+ db.approvals.forEach(a=>{
+  const div=document.createElement("div");
+  div.className="card";
+  div.innerHTML=`<b>${a.merchant}</b><p>$${a.amount} — ${a.category}</p><p>${a.reason}</p>
+  <button class="btn small" data-ok="${a.id}">Approve</button>
+  <button class="btn small danger" data-no="${a.id}">Reject</button>`;
+  root.appendChild(div);
+ });
+ root.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>approve(+b.dataset.ok));
+ root.querySelectorAll("[data-no]").forEach(b=>b.onclick=()=>reject(+b.dataset.no));
+}
+
+function approve(id){
+ const i=db.approvals.findIndex(x=>x.id===id);
+ const t=db.approvals.splice(i,1)[0]; t.status="approved"; db.tx.push(t); save(); renderApprovals(); toast("Approved","Manager approved purchase");
+}
+function reject(id){
+ db.approvals=db.approvals.filter(x=>x.id!==id); save(); renderApprovals(); toast("Rejected","Purchase rejected","bad");
+}
+
+function renderTx(){
+ const root=$("#viewRoot");
+ if(!db.tx.length){root.innerHTML='<div class="card">No transactions yet.</div>';return;}
+ let html='<table class="table"><tr><th>Merchant</th><th>Amount</th><th>Status</th><th>Time</th></tr>';
+ db.tx.forEach(t=>html+=`<tr><td>${t.merchant}</td><td>$${t.amount}</td><td>${t.status}</td><td>${new Date(t.time).toLocaleString()}</td></tr>`);
+ html+='</table>';
+ root.innerHTML=html;
+}
+
+function renderPolicies(){
+ const root=$("#viewRoot");
+ root.innerHTML=`<div class="card">
+ <label>Technician Limit</label><input id="limit" type="number" class="field" value="${db.policies.techLimit}"/>
+ <label>Blocked Category</label><input id="block" class="field" value="${db.policies.blockedCats.join(",")}"/>
+ <button class="btn primary" id="savePol">Save</button>
+ </div>`;
+ $("#savePol").onclick=()=>{
+  db.policies.techLimit=+$("#limit").value;
+  db.policies.blockedCats=$("#block").value.split(",").map(x=>x.trim());
+  save(); toast("Saved","Policy updated");
+ };
+}
+
+$("#btnExport")?.addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify(db.tx,null,2)],{type:"application/json"});
+ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="attest-ledger.json"; a.click();
+});
+
+$("#btnReset")?.addEventListener("click",()=>{localStorage.removeItem("attest_db"); location.reload();});
+
+setView("dashboard");
+})();
+</script>
+
+</script>
+</body>
+</html>
