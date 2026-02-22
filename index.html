@@ -553,14 +553,6 @@ function itemStatus(item){
     // Default conservative
     return "Needs approval";
   }
-
-    // Auto-approved categories
-    var auto = state.policy.autoApproved.map(function(x){ return x.toLowerCase(); });
-    if(auto.indexOf(cat) >= 0) return "Approved";
-
-    // Default to approval-needed for anything else in the demo
-    return "Needs approval";
-  }
   function overallApproval(){
     if(state.cart.length === 0) return { status:"—", badge:"warn" };
     if(state.cart.some(function(i){ return itemStatus(i) === "Blocked"; })) return { status:"Blocked", badge:"block" };
