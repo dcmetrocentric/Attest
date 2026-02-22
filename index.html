@@ -1,1063 +1,160 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>ATTEST — MVP</title>
-  <meta name="theme-color" content="#0B1220"/>
-  <style>
-    :root{
-      --bg:#070B12;
-      --panel:#0B1220;
-      --panel2:#0F1A2E;
-      --text:#E7ECF6;
-      --muted:#A7B2C8;
-      --muted2:#7F8AA3;
-      --brand:#2FE6C6;
-      --brand2:#6AA6FF;
-      --warn:#FFB020;
-      --bad:#FF4D6D;
-      --good:#2FE6C6;
-      --line:rgba(255,255,255,.09);
-      --shadow: 0 14px 40px rgba(0,0,0,.45);
-      --radius:18px;
-      --radius2:14px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:var(--sans);
-      color:var(--text);
-      background:
-        radial-gradient(1100px 900px at 20% -10%, rgba(106,166,255,.20), transparent 55%),
-        radial-gradient(900px 800px at 110% 10%, rgba(47,230,198,.14), transparent 50%),
-        radial-gradient(900px 900px at 35% 120%, rgba(47,230,198,.10), transparent 55%),
-        linear-gradient(180deg, #060A11, #050814 40%, #050711);
-      overflow-x:hidden;
-    }
-    a{color:inherit}
-    button,input,select,textarea{font:inherit}
-    .safe{padding-bottom: max(16px, env(safe-area-inset-bottom));}
-    .app{
-      max-width: 980px;
-      margin: 0 auto;
-      min-height:100%;
-      display:flex;
-      flex-direction:column;
-    }
-    .topbar{
-      position:sticky; top:0; z-index:20;
-      backdrop-filter: blur(14px);
-      background: linear-gradient(180deg, rgba(7,11,18,.85), rgba(7,11,18,.55));
-      border-bottom:1px solid var(--line);
-    }
-    .topbar .inner{
-      display:flex; align-items:center; justify-content:space-between;
-      padding: 14px 16px;
-      gap: 10px;
-    }
-    .brandmark{display:flex; align-items:center; gap:10px; min-width: 180px;}
-    .logo{
-      width:36px; height:36px; border-radius:12px;
-      background: radial-gradient(18px 18px at 30% 30%, rgba(255,255,255,.25), transparent 60%),
-                  linear-gradient(135deg, rgba(47,230,198,1), rgba(106,166,255,1));
-      box-shadow: 0 10px 26px rgba(47,230,198,.12), 0 10px 26px rgba(106,166,255,.12);
-      position:relative; overflow:hidden;
-    }
-    .logo:after{
-      content:"";
-      position:absolute; inset:-40%;
-      background: conic-gradient(from 140deg, rgba(255,255,255,.0), rgba(255,255,255,.25), rgba(255,255,255,.0));
-      animation: sweep 6s linear infinite;
-      opacity:.7;
-    }
-    @keyframes sweep{to{transform:rotate(360deg)}}
-    .brandname{display:flex; flex-direction:column; line-height:1.05;}
-    .brandname b{letter-spacing:.22em; font-size:13px}
-    .brandname span{font-size:12px; color:var(--muted)}
-    .pill{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:7px 10px; border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(15,26,46,.55);
-      color:var(--muted);
-      white-space:nowrap;
-      font-size:12px;
-    }
-    .dot{width:8px; height:8px; border-radius:99px; background: var(--good); box-shadow: 0 0 0 4px rgba(47,230,198,.12)}
-    .actions{display:flex; align-items:center; gap:10px}
-    .iconbtn{
-      border:1px solid var(--line);
-      background: rgba(15,26,46,.50);
-      color:var(--text);
-      border-radius: 14px;
-      padding:10px 12px;
-      cursor:pointer;
-      transition:.15s transform ease, .15s background ease, .15s border-color ease;
-    }
-    .iconbtn:hover{transform: translateY(-1px); background: rgba(15,26,46,.78); border-color: rgba(255,255,255,.16)}
-    .icon{width:18px; height:18px; display:inline-block; vertical-align:middle; fill: currentColor; opacity:.92;}
-    .content{display:grid; grid-template-columns: 320px 1fr; gap: 16px; padding: 16px; flex:1;}
-    @media (max-width: 920px){.content{grid-template-columns: 1fr; padding: 14px}.brandmark{min-width: unset}}
-    .nav{border:1px solid var(--line); background: rgba(11,18,32,.62); box-shadow: var(--shadow); border-radius: var(--radius); overflow:hidden;}
-    .navhead{padding:14px 14px 10px; border-bottom:1px solid var(--line); background: linear-gradient(180deg, rgba(106,166,255,.10), rgba(47,230,198,.06));}
-    .orgline{display:flex; align-items:center; justify-content:space-between; gap:10px}
-    .orgline h3{margin:0; font-size:14px; letter-spacing:.02em}
-    .orgline .small{color:var(--muted); font-size:12px}
-    .rolechip{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;}
-    .chip{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px solid var(--line); background: rgba(15,26,46,.60); font-size:12px; color:var(--muted); cursor:pointer; user-select:none;}
-    .chip.active{border-color: rgba(47,230,198,.45); color: var(--text); box-shadow: 0 0 0 4px rgba(47,230,198,.10);}
-    .navlist{padding: 10px 8px}
-    .navitem{display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius: 14px; cursor:pointer; color: var(--muted); transition:.15s background ease, .15s transform ease, .15s color ease;}
-    .navitem:hover{background: rgba(15,26,46,.55); transform: translateY(-1px); color: var(--text)}
-    .navitem.active{background: rgba(15,26,46,.75); color: var(--text); border:1px solid rgba(255,255,255,.10)}
-    .navitem .badge{margin-left:auto; font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.10); color: var(--muted); background: rgba(0,0,0,.12);}
-    .panel{border:1px solid var(--line); background: rgba(11,18,32,.56); box-shadow: var(--shadow); border-radius: var(--radius); overflow:hidden; position:relative;}
-    .panelhead{padding:16px 16px 12px; border-bottom:1px solid var(--line); display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;
-      background:
-        radial-gradient(900px 360px at 10% 0%, rgba(47,230,198,.12), transparent 60%),
-        radial-gradient(820px 420px at 90% 0%, rgba(106,166,255,.14), transparent 65%);}
-    .panelhead h1{margin:0; font-size:18px; letter-spacing:.01em;}
-    .sub{color:var(--muted); font-size:13px; margin-top:4px}
-    .ctaRow{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
-    .btn{border:1px solid rgba(255,255,255,.12); background: rgba(15,26,46,.65); color: var(--text); border-radius: 14px; padding:10px 12px; cursor:pointer; transition:.15s transform ease, .15s background ease, .15s border-color ease; display:inline-flex; align-items:center; gap:10px;}
-    .btn:hover{transform: translateY(-1px); background: rgba(15,26,46,.85); border-color: rgba(255,255,255,.18)}
-    .btn.primary{background: linear-gradient(135deg, rgba(47,230,198,.95), rgba(106,166,255,.92)); color: #061019; border-color: transparent; font-weight: 700; box-shadow: 0 14px 36px rgba(47,230,198,.18), 0 14px 36px rgba(106,166,255,.14);}
-    .btn.primary:hover{filter: brightness(1.03)}
-    .btn.danger{border-color: rgba(255,77,109,.35); background: rgba(255,77,109,.10);}
-    .btn.small{padding:8px 10px; border-radius:12px; font-size:12px}
-    .kbd{font-family:var(--mono); font-size:11px; padding:3px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.15); color: var(--muted);}
-    .panelbody{padding:16px}
-    .grid{display:grid; grid-template-columns: repeat(12, 1fr); gap: 12px;}
-    .card{border:1px solid rgba(255,255,255,.10); background: rgba(15,26,46,.58); border-radius: var(--radius2); padding: 14px; overflow:hidden; position:relative;}
-    .card h4{margin:0 0 6px; font-size:13px; color: var(--text)}
-    .card p{margin:0; color: var(--muted); font-size:12px; line-height:1.45}
-    .metric{font-size: 22px; font-weight: 800; letter-spacing: .01em; margin-top:10px;}
-    .spark{position:absolute; right:-28px; top:-30px; width:140px; height:140px; opacity:.22;
-      background: radial-gradient(circle at 30% 30%, rgba(47,230,198,1), transparent 58%),
-                  radial-gradient(circle at 70% 60%, rgba(106,166,255,1), transparent 60%);
-      filter: blur(1px); border-radius: 999px;}
-    .status{display:inline-flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); margin-top:10px;}
-    .status b{color:var(--text)}
-    .tag{display:inline-flex; align-items:center; gap:8px; font-size:11px; padding:5px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.12); color: var(--muted);}
-    .tag.good{border-color: rgba(47,230,198,.35); color: #BFF9EE; background: rgba(47,230,198,.10)}
-    .tag.warn{border-color: rgba(255,176,32,.35); color: #FFE2AE; background: rgba(255,176,32,.10)}
-    .tag.bad{border-color: rgba(255,77,109,.35); color: #FFD1DA; background: rgba(255,77,109,.10)}
-    .table{width:100%; border-collapse: collapse; font-size:12px; overflow:hidden; border-radius: 14px; border:1px solid rgba(255,255,255,.10); background: rgba(15,26,46,.44);}
-    .table th, .table td{padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.07); text-align:left; vertical-align:top;}
-    .table th{color: var(--muted); font-weight:600; letter-spacing:.02em; font-size:11px}
-    .table tr:hover td{background: rgba(255,255,255,.03)}
-    .mono{font-family:var(--mono)}
-    .right{text-align:right}
-    .center{text-align:center}
-    .wizard{display:grid; grid-template-columns: 1fr; gap: 12px;}
-    .steps{display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 6px;}
-    .stepdot{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.10); background: rgba(15,26,46,.46); color: var(--muted); font-size:12px;}
-    .stepdot.active{border-color: rgba(47,230,198,.45); color: var(--text); box-shadow: 0 0 0 4px rgba(47,230,198,.10);}
-    .formrow{display:grid; grid-template-columns: 1fr 1fr; gap: 10px;}
-    @media (max-width: 640px){.formrow{grid-template-columns: 1fr}}
-    label{display:block; font-size:11px; color: var(--muted); margin-bottom:6px; letter-spacing:.02em}
-    .field{width:100%; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18); color: var(--text); padding: 11px 12px; border-radius: 14px; outline:none;}
-    .field:focus{border-color: rgba(47,230,198,.40); box-shadow: 0 0 0 4px rgba(47,230,198,.10)}
-    .help{margin-top:8px; font-size:12px; color: var(--muted2); line-height:1.4;}
-    .divider{height:1px; background: rgba(255,255,255,.08); margin: 10px 0;}
-    .receiptPreview{display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;}
-    .previewBox{width: 160px; height: 200px; border:1px dashed rgba(255,255,255,.18); border-radius: 14px; background: rgba(0,0,0,.16); display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;}
-    .previewBox img{width:100%; height:100%; object-fit:cover}
-    .mini{font-size:11px; color:var(--muted); line-height:1.35;}
-    .callout{border:1px solid rgba(255,255,255,.12); background: rgba(15,26,46,.50); border-radius: 14px; padding: 12px;}
-    .callout h5{margin:0 0 6px; font-size:12px; color: var(--text)}
-    .callout p{margin:0; font-size:12px; color: var(--muted); line-height:1.45}
-    .ledgerbox{font-family: var(--mono); font-size: 11px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.20); border-radius: 14px; padding: 10px; color: #D7E0F3; white-space: pre-wrap; overflow:auto; max-height: 220px;}
-    .toast{position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px; z-index: 50; width:min(560px, calc(100% - 24px)); border:1px solid rgba(255,255,255,.14); background: rgba(11,18,32,.80); backdrop-filter: blur(12px); border-radius: 16px; box-shadow: 0 18px 60px rgba(0,0,0,.55); padding: 12px; display:none; gap: 10px; align-items:flex-start;}
-    .toast.show{display:flex}
-    .toast .ticon{width:34px; height:34px; border-radius: 14px; display:flex; align-items:center; justify-content:center;}
-    .toast .ticon.good{background: rgba(47,230,198,.14); border:1px solid rgba(47,230,198,.35)}
-    .toast .ticon.warn{background: rgba(255,176,32,.12); border:1px solid rgba(255,176,32,.35)}
-    .toast .ticon.bad{background: rgba(255,77,109,.12); border:1px solid rgba(255,77,109,.35)}
-    .toast b{display:block; font-size:12px}
-    .toast span{display:block; font-size:12px; color: var(--muted); line-height:1.35; margin-top:2px}
-    .toast .tclose{margin-left:auto}
-    .overlay{position:fixed; inset:0; z-index:60; background: rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; padding: 18px;}
-    .overlay.show{display:flex}
-    .modal{width: min(760px, 100%); border:1px solid rgba(255,255,255,.14); background: rgba(11,18,32,.86); backdrop-filter: blur(16px); border-radius: 18px; box-shadow: 0 22px 80px rgba(0,0,0,.65); overflow:hidden;}
-    .modalhead{padding: 14px 14px 12px; border-bottom:1px solid rgba(255,255,255,.10); display:flex; align-items:center; justify-content:space-between; gap:10px;
-      background:
-        radial-gradient(760px 280px at 10% 0%, rgba(47,230,198,.14), transparent 60%),
-        radial-gradient(760px 280px at 90% 0%, rgba(106,166,255,.16), transparent 65%);}
-    .modalhead h3{margin:0; font-size:14px}
-    .modalbody{padding: 14px}
-    .modalfoot{padding: 12px 14px; border-top:1px solid rgba(255,255,255,.10); display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap}
-    .muted{color:var(--muted)}
-    .tiny{font-size:11px}
-    .nowrap{white-space:nowrap}
-    .spacer{height:10px}
-    .split{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;}
-    .hr{height:1px; background: rgba(255,255,255,.08); margin: 12px 0}
-    .hint{display:flex; gap:10px; align-items:flex-start; padding: 10px 12px; border-radius: 14px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.14); color: var(--muted); font-size:12px;}
-    .hint .spark2{width:26px; height:26px; border-radius: 12px; border:1px solid rgba(47,230,198,.35); background: rgba(47,230,198,.12); display:flex; align-items:center; justify-content:center; flex: 0 0 auto;}
-    .mobileBottomBar{position: sticky; bottom: 0; z-index: 15; border-top:1px solid rgba(255,255,255,.10); background: rgba(7,11,18,.78); backdrop-filter: blur(14px); padding: 10px 12px; display:none; gap:10px; align-items:center; justify-content:space-between;}
-    @media (max-width: 920px){.mobileBottomBar{display:flex}}
-    .seg{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
-    .seg .pill{padding:7px 10px}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>ATTEST Demo</title>
+<style>
+:root{
+  --bg:#0b1220;
+  --card:#111a2e;
+  --accent:#6d7cff;
+  --accent2:#22c55e;
+  --text:#e5ecff;
+  --muted:#9fb0d9;
+}
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+body{margin:0;background:linear-gradient(180deg,#0b1220,#0e1730);color:var(--text)}
+#app{min-height:100vh;display:flex;flex-direction:column}
+header{padding:16px 18px;font-weight:700;letter-spacing:.5px}
+video{width:100%;height:60vh;object-fit:cover;background:#000}
+.overlay{
+ position:relative;margin-top:-120px;padding:18px;
+}
+.card{
+ background:rgba(17,26,46,.92);
+ border-radius:22px;padding:18px;
+ box-shadow:0 20px 40px rgba(0,0,0,.35);
+}
+.hint{color:var(--muted);margin-top:6px}
+.big{font-size:24px;font-weight:700}
+.center{display:flex;align-items:center;justify-content:center;text-align:center}
+button{
+ width:100%;padding:16px;border:none;border-radius:16px;
+ font-size:18px;font-weight:700;background:var(--accent);color:white;margin-top:14px
+}
+button.secondary{background:#263456}
+button.green{background:var(--accent2)}
+.hidden{display:none}
+.progress{
+ height:6px;background:#263456;border-radius:6px;margin-top:10px;overflow:hidden
+}
+.bar{height:100%;background:var(--accent2);width:0%}
+.timer{font-size:36px;font-weight:800;margin-top:6px}
+.dim{position:fixed;inset:0;background:#000;display:none;align-items:center;justify-content:center;flex-direction:column}
+.wallet{
+ width:280px;height:170px;border-radius:22px;background:linear-gradient(135deg,#4f46e5,#7c8cff);
+ box-shadow:0 15px 40px rgba(0,0,0,.5);display:flex;align-items:flex-end;padding:16px
+}
+.success{font-size:28px;margin-top:16px}
+.small{color:var(--muted);margin-top:6px}
+</style>
 </head>
 <body>
-  <div class="app safe">
-    <div class="topbar">
-      <div class="inner">
-        <div class="brandmark">
-          <div class="logo" aria-hidden="true"></div>
-          <div class="brandname">
-            <b>ATTEST</b>
-            <span>Intent-verified transactions</span>
-          </div>
-        </div>
+<div id="app">
+<header>ATTEST</header>
 
-        <div class="actions">
-          <div class="pill" id="envPill" title="Demo environment status">
-            <span class="dot" id="envDot"></span>
-            <span id="envLabel">Demo mode</span>
-          </div>
-          <button class="iconbtn" id="btnHelp" title="Quick tour">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm1 17h-2v-2h2v2Zm2.07-7.75-.9.92A3.49 3.49 0 0 0 13 15h-2v-.5c0-.83.34-1.63.93-2.22l1.24-1.26A1.99 1.99 0 0 0 12 7a2 2 0 0 0-2 2H8a4 4 0 1 1 7.07 2.25Z"/></svg>
-          </button>
-          <button class="iconbtn" id="btnExport" title="Export audit ledger">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14v-2H5v2Zm7-18L5.33 8.67 6.75 10.1 11 5.85V16h2V5.85l4.25 4.25 1.42-1.43L12 2Z"/></svg>
-          </button>
-          <button class="iconbtn" id="btnReset" title="Reset demo data">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5a5 5 0 0 1-9.9 1H5.02a7 7 0 0 0 13.98-1c0-3.87-3.13-7-7-7Z"/></svg>
-          </button>
-        </div>
-      </div>
-    </div>
+<!-- CAMERA -->
+<video id="cam" autoplay playsinline muted></video>
 
-    <div class="content">
-      <aside class="nav">
-        <div class="navhead">
-          <div class="orgline">
-            <div>
-              <h3 id="orgName">Northstar Facilities</h3>
-              <div class="small" id="orgSub">3 job sites • 28 technicians</div>
-            </div>
-            <div class="tag good" id="policyHealth">Policy: Healthy</div>
-          </div>
-          <div class="rolechip">
-            <div class="chip active" data-role="tech" id="roleTech">Technician</div>
-            <div class="chip" data-role="manager" id="roleMgr">Manager</div>
-            <div class="chip" data-role="admin" id="roleAdmin">Admin</div>
-          </div>
-        </div>
-
-        <div class="navlist">
-          <div class="navitem active" data-view="dashboard">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/></svg>
-            <span>Dashboard</span>
-          </div>
-          <div class="navitem" data-view="newPurchase">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2Z"/></svg>
-            <span>New purchase</span>
-            <span class="badge" id="quickBadge">⌘K</span>
-          </div>
-          <div class="navitem" data-view="approvals" id="navApprovals">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11H7v2h2v-2Zm0-4H7v2h2V7Zm0 8H7v2h2v-2Zm4-8h4v2h-4V7Zm0 4h4v2h-4v-2Zm0 4h4v2h-4v-2ZM5 3h14a2 2 0 0 1 2 2v16l-4-3H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg>
-            <span>Approvals</span>
-            <span class="badge" id="approvalCount">0</span>
-          </div>
-          <div class="navitem" data-view="transactions">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v2H3V7Zm0 8h18v2H3v-2Zm0-4h12v2H3v-2Z"/></svg>
-            <span>Transactions</span>
-          </div>
-          <div class="navitem" data-view="policies">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.74 8 11 4.6-1.26 8-6 8-11V5l-8-3Zm-1 15-4-4 1.4-1.4L11 14.2l4.6-4.6L17 11l-6 6Z"/></svg>
-            <span>Policies</span>
-          </div>
-          <div class="navitem" data-view="settings">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.2 7.2 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 14.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L1.71 7.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L1.83 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.51.4 1.05.71 1.63.94l.36 2.54c.04.24.25.42.49.42h3.8c.24 0 .45-.18.49-.42l.36-2.54c.58-.23 1.12-.54 1.63-.94l2.39.96c.22.09.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg>
-            <span>Settings</span>
-          </div>
-        </div>
-      </aside>
-
-      <main class="panel" id="mainPanel">
-        <div class="panelhead">
-          <div>
-            <h1 id="viewTitle">Dashboard</h1>
-            <div class="sub" id="viewSub">Real-time authorization for decentralized spending.</div>
-          </div>
-          <div class="ctaRow">
-            <button class="btn primary" id="btnNewPurchaseTop">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2Z"/></svg>
-              New purchase
-              <span class="kbd">⌘K</span>
-            </button>
-            <button class="btn" id="btnSimulatePolicy">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2 2 0 0 1-2-2H7a2 2 0 0 1-2-2V9.5A6.5 6.5 0 0 1 18.5 9.5V18a2 2 0 0 1-2 2h-2a2 2 0 0 1-2 2Zm-5-4h10v-8.5a5 5 0 0 0-10 0V18Zm4-3h2v2h-2v-2Z"/></svg>
-              Test a policy block
-            </button>
-          </div>
-        </div>
-
-        <div class="panelbody" id="viewRoot"></div>
-
-        <div class="mobileBottomBar">
-          <div class="seg">
-            <span class="pill"><span class="dot"></span><span id="rolePill">Technician</span></span>
-            <span class="pill" id="orgPill"><span style="opacity:.9">🏢</span><span id="orgPillText">Northstar Facilities</span></span>
-          </div>
-          <button class="btn primary" id="btnNewPurchaseBottom">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 13H13v6h-2v-6H5v-2h6V5h2v6h6v2Z"/></svg>
-            Purchase
-          </button>
-        </div>
-      </main>
-    </div>
+<div class="overlay">
+  <div id="scanCard" class="card">
+    <div class="big">What are you buying?</div>
+    <div class="hint">Point at the item or receipt</div>
+    <div class="progress"><div id="scanBar" class="bar"></div></div>
+    <button id="startScan" class="secondary">Simulate Scan</button>
   </div>
 
-  <div class="toast" id="toast">
-    <div class="ticon good" id="toastIcon">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>
-    </div>
+  <div id="recognizedCard" class="card hidden">
+    <div class="big">Home Depot detected</div>
+    <div class="hint">Category: Hardware • Est: $42</div>
+    <div class="small">Looks good — this is covered.</div>
+    <button id="approveBtn" class="green">Activate Work Card</button>
+  </div>
+
+  <div id="activeCard" class="card hidden center">
     <div>
-      <b id="toastTitle">Saved</b>
-      <span id="toastMsg">Your changes were applied.</span>
-    </div>
-    <button class="btn small tclose" id="toastClose">Close</button>
-  </div>
-
-  <div class="overlay" id="overlay">
-    <div class="modal" role="dialog" aria-modal="true">
-      <div class="modalhead">
-        <h3 id="modalTitle">Modal</h3>
-        <button class="iconbtn" id="modalClose" aria-label="Close">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L12 13.41 5.11 19.71 3.7 18.29 10.59 12 3.7 5.71 5.11 4.29 12 10.59l6.89-6.3 1.42 1.42Z"/></svg>
-        </button>
-      </div>
-      <div class="modalbody" id="modalBody"></div>
-      <div class="modalfoot" id="modalFoot"></div>
+      <div class="big">Your work card is ready</div>
+      <div class="small">Tap your phone to pay</div>
+      <div id="timer" class="timer">10:00</div>
+      <button id="tapBtn">Tap to Pay</button>
     </div>
   </div>
 
+  <div id="doneCard" class="card hidden center">
+    <div>
+      <div class="big">All set 👍</div>
+      <div class="small">Transaction logged<br/>No expense report needed</div>
+      <button onclick="location.reload()">Done</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="wallet" class="dim">
+  <div class="wallet"></div>
+  <div class="success">Payment Authorized</div>
+  <div class="small">Receipt automatically recorded</div>
+</div>
 
 <script>
-(function(){
-  const $ = (s) => document.querySelector(s);
-  const $$ = (s) => Array.from(document.querySelectorAll(s));
+// camera
+const video=document.getElementById('cam');
+async function startCamera(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+    video.srcObject=stream;
+  }catch(e){
+    console.log("Camera unavailable, continuing demo");
+  }
+}
+startCamera();
 
-  // --- persistent demo storage ---
-  const DEFAULT_DB = {
-    tx: [],
-    approvals: [],
-    policies: { techLimit: 200, blockedCats: ["Electronics"] }
-  };
-  const db = (() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("attest_db") || "null") || {};
-      const merged = JSON.parse(JSON.stringify(DEFAULT_DB));
-      merged.tx = Array.isArray(stored.tx) ? stored.tx : merged.tx;
-      merged.approvals = Array.isArray(stored.approvals) ? stored.approvals : merged.approvals;
-      merged.policies = Object.assign({}, merged.policies, stored.policies || {});
-      return merged;
-    } catch {
-      return JSON.parse(JSON.stringify(DEFAULT_DB));
+// scan simulation
+const scanBar=document.getElementById('scanBar');
+document.getElementById('startScan').onclick=()=>{
+  let p=0;
+  const i=setInterval(()=>{
+    p+=8;scanBar.style.width=p+"%";
+    if(p>=100){
+      clearInterval(i);
+      document.getElementById('scanCard').classList.add('hidden');
+      document.getElementById('recognizedCard').classList.remove('hidden');
+      if(navigator.vibrate) navigator.vibrate(60);
     }
-  })();
-  function save(){ localStorage.setItem("attest_db", JSON.stringify(db)); }
-
-  // --- toast ---
-  function toast(title, msg, type="good"){
-    const t = $("#toast");
-    if(!t) return;
-    $("#toastTitle").textContent = title;
-    $("#toastMsg").textContent = msg;
-    const icon = $("#toastIcon");
-    if(icon) icon.className = "ticon " + type;
-    t.classList.add("show");
-    clearTimeout(toast._t);
-    toast._t = setTimeout(()=>t.classList.remove("show"), 3200);
-  }
-  $("#toastClose")?.addEventListener("click", ()=>$("#toast").classList.remove("show"));
-
-  // --- modal helpers ---
-  function openModal(title, bodyHTML, footButtons=[]) {
-    $("#modalTitle").textContent = title;
-    $("#modalBody").innerHTML = bodyHTML;
-    const foot = $("#modalFoot");
-    foot.innerHTML = "";
-    footButtons.forEach(btn => foot.appendChild(btn));
-    $("#overlay").classList.add("show");
-  }
-  function closeModal(){ $("#overlay").classList.remove("show"); }
-  $("#modalClose")?.addEventListener("click", closeModal);
-  $("#overlay")?.addEventListener("click",(e)=>{ if(e.target.id==="overlay") closeModal(); });
-
-  // --- role switching ---
-  let role = "tech";
-  function setRole(r){
-    role = r;
-    $("#roleTech")?.classList.toggle("active", r==="tech");
-    $("#roleMgr")?.classList.toggle("active", r==="manager");
-    $("#roleAdmin")?.classList.toggle("active", r==="admin");
-    const pill = $("#rolePill"); if(pill) pill.textContent = (r==="tech"?"Technician":r==="manager"?"Manager":"Admin");
-    renderApprovalBadge();
-    renderCurrentView();
-    toast("Role switched", `Now viewing as ${role==="tech"?"Technician":role==="manager"?"Manager":"Admin"}.`);
-  }
-  $$(".chip").forEach(ch=> ch.addEventListener("click", ()=> setRole(ch.dataset.role)));
-
-  // --- navigation / views ---
-  let currentView = "dashboard";
-  let payTxId = null;
-  let payTimer = null;
-
-  function setView(v, opts={}){
-    if(currentView==="pay" && v!=="pay") stopPayTimer();
-    currentView = v;
-    if(v==="pay" && opts.txId) payTxId = opts.txId;
-
-    $$(".navitem").forEach(n=> n.classList.toggle("active", n.dataset.view===v));
-    const titles = {
-      dashboard: ["Dashboard", "Real-time authorization for decentralized spending."],
-      newPurchase: ["New Purchase", "Capture intent, attach proof, and route approvals in seconds."],
-      approvals: ["Approvals", "Review and approve flagged purchases."],
-      transactions: ["Transactions", "A live ledger of approved purchases."],
-      policies: ["Policies", "Tune limits and rules that drive real-time decisions."],
-      settings: ["Settings", "Demo controls and export tools."],
-      pay: ["Pay", "Approved—complete the payment within the authorization window."]
-    };
-    $("#viewTitle").textContent = titles[v]?.[0] || "Dashboard";
-    $("#viewSub").textContent   = titles[v]?.[1] || "";
-    renderCurrentView();
-  }
-
-  $$(".navitem").forEach(n=> n.addEventListener("click", ()=> setView(n.dataset.view)));
-  $("#btnNewPurchaseTop")?.addEventListener("click", ()=> setView("newPurchase"));
-  $("#btnNewPurchaseBottom")?.addEventListener("click", ()=> setView("newPurchase"));
-
-  document.addEventListener("keydown",(e)=>{
-    const isMac = navigator.platform.toLowerCase().includes("mac");
-    if((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase()==="k"){ e.preventDefault(); setView("newPurchase"); }
-  });
-
-  // --- header buttons ---
-  $("#btnExport")?.addEventListener("click", ()=> exportLedger());
-  $("#btnReset")?.addEventListener("click", ()=> { localStorage.removeItem("attest_db"); location.reload(); });
-  $("#btnHelp")?.addEventListener("click", ()=> showHelp());
-  $("#btnSimulatePolicy")?.addEventListener("click", ()=> simulatePolicyBlock());
-
-  // --- render helpers ---
-  function renderApprovalBadge(){
-    const c = $("#approvalCount");
-    if(c) c.textContent = String(db.approvals.length);
-  }
-
-  function renderCurrentView(){
-    const root = $("#viewRoot");
-    if(!root) return;
-    root.innerHTML = "";
-    if(currentView==="dashboard") return renderDashboard(root);
-    if(currentView==="newPurchase") return renderNewPurchase(root);
-    if(currentView==="approvals") return renderApprovals(root);
-    if(currentView==="transactions") return renderTransactions(root);
-    if(currentView==="policies") return renderPolicies(root);
-    if(currentView==="settings") return renderSettings(root);
-    if(currentView==="pay") return renderPay(root, payTxId);
-  }
-
-  function money(n){ return isFinite(n) ? `$${n.toFixed(2)}` : "$0.00"; }
-  function fmtTime(iso){ try { return new Date(iso).toLocaleString(); } catch { return iso; } }
-  function getTx(id){ return db.tx.find(t=>t.id===id) || db.approvals.find(t=>t.id===id) || null; }
-
-  // --- dashboard ---
-  function renderDashboard(root){
-    const pending = db.approvals.length;
-    const tx = db.tx.length;
-    root.innerHTML = `
-      <div class="grid">
-        <div class="card" style="grid-column: span 4">
-          <div class="spark"></div>
-          <h4>Transactions</h4>
-          <div class="metric">${tx}</div>
-          <div class="status"><span class="tag good">Healthy</span><span>Ledger is up to date.</span></div>
-        </div>
-        <div class="card" style="grid-column: span 4">
-          <div class="spark"></div>
-          <h4>Pending approvals</h4>
-          <div class="metric">${pending}</div>
-          <div class="status"><span class="tag ${pending? "warn":"good"}">${pending? "Action needed":"Clear"}</span><span>${pending? "Manager review required.":"No approvals waiting."}</span></div>
-        </div>
-        <div class="card" style="grid-column: span 4">
-          <div class="spark"></div>
-          <h4>Technician limit</h4>
-          <div class="metric">${money(db.policies.techLimit)}</div>
-          <div class="status"><span class="tag">Policy</span><span>${(db.policies.blockedCats||[]).length} restricted categories</span></div>
-        </div>
-      </div>
-
-      <div class="hr"></div>
-
-      <div class="hint">
-        <div class="spark2">⚡</div>
-        <div>
-          <b class="muted">Try it:</b> Create a purchase under ${money(db.policies.techLimit)} to auto-approve, or choose <b>Electronics</b> / a large amount to route to approvals.
-        </div>
-      </div>
-    `;
-    renderApprovalBadge();
-  }
-
-  // --- New purchase ---
-  let currentReceiptDataUrl = null;
-
-  function renderNewPurchase(root){
-    const limit = db.policies.techLimit;
-    const blocked = (db.policies.blockedCats||[]).join(", ");
-    root.innerHTML = `
-      <div class="wizard">
-        <div class="steps">
-          <div class="stepdot active"><span class="tag">1</span> Details</div>
-          <div class="stepdot"><span class="tag">2</span> Proof</div>
-          <div class="stepdot"><span class="tag">3</span> Submit</div>
-        </div>
-
-        <div class="card">
-          <div class="formrow">
-            <div>
-              <label>Merchant</label>
-              <input class="field" id="fMerchant" placeholder="Home Depot" autocomplete="off"/>
-            </div>
-            <div>
-              <label>Amount (USD)</label>
-              <input class="field" id="fAmount" type="number" inputmode="decimal" placeholder="47.50"/>
-            </div>
-          </div>
-
-          <div class="formrow" style="margin-top:10px">
-            <div>
-              <label>Category</label>
-              <select class="field" id="fCategory">
-                <option>Supplies</option>
-                <option>Tools</option>
-                <option>Food</option>
-                <option>Electronics</option>
-              </select>
-            </div>
-            <div>
-              <label>Job / Cost Center</label>
-              <input class="field" id="fJob" placeholder="Site 12 • Unit 3B" autocomplete="off"/>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="receiptPreview">
-            <div>
-              <button class="btn" id="btnCapture">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2 7.17 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9Zm3 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/></svg>
-                Capture receipt
-              </button>
-              <div class="help">Tip: install on Home Screen (GitHub Pages URL) for best camera behavior.</div>
-            </div>
-            <div class="previewBox" id="receiptBox">
-              <div class="mini">No receipt yet</div>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="split">
-            <div class="mini">
-              <div><b>Policy preview</b></div>
-              <div>Technician limit: <span class="mono">${money(limit)}</span></div>
-              <div>Restricted categories: <span class="mono">${blocked || "None"}</span></div>
-            </div>
-            <div class="ctaRow">
-              <button class="btn primary" id="btnSubmitPurchase">
-                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21 23 12 2 3v7l15 2-15 2v7Z"/></svg>
-                Submit for authorization
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const file = document.createElement("input");
-    file.type="file";
-    file.accept="image/*";
-    file.capture="environment";
-    file.style.display="none";
-    document.body.appendChild(file);
-
-    $("#btnCapture").addEventListener("click", ()=> file.click());
-    file.addEventListener("change", (e)=>{
-      const f = e.target.files?.[0];
-      if(!f) return;
-      const r = new FileReader();
-      r.onload = ()=>{
-        currentReceiptDataUrl = r.result;
-        $("#receiptBox").innerHTML = `<img alt="receipt" src="${currentReceiptDataUrl}">`;
-        toast("Receipt attached","Saved with purchase.");
-      };
-      r.readAsDataURL(f);
-    });
-
-    $("#btnSubmitPurchase").addEventListener("click", ()=>{
-      const merchant = $("#fMerchant").value.trim();
-      const amount = Number($("#fAmount").value);
-      const category = $("#fCategory").value;
-      const job = $("#fJob").value.trim();
-
-      if(!merchant || !isFinite(amount) || amount<=0){
-        toast("Missing info","Enter a merchant and a valid amount.","bad");
-        return;
-      }
-
-      const tx = {
-        id: Date.now(),
-        merchant,
-        amount,
-        category,
-        job,
-        receipt: currentReceiptDataUrl,
-        time: new Date().toISOString(),
-        status: "pending"
-      };
-
-      const reasons = [];
-      if(amount > db.policies.techLimit) reasons.push(`Amount exceeds technician limit (${money(db.policies.techLimit)})`);
-      if((db.policies.blockedCats||[]).includes(category)) reasons.push(`${category} requires manager approval`);
-
-      if(reasons.length===0){
-        tx.status="approved_unpaid";
-        tx.approvedAt = new Date().toISOString();
-        tx.payWindowSeconds = 10 * 60;
-        tx.payExpiresAt = new Date(Date.now() + tx.payWindowSeconds*1000).toISOString();
-        db.tx.push(tx);
-        save();
-        renderApprovalBadge();
-        toast("Approved","Payment window opened.","good");
-        setView("pay", {txId: tx.id});
-      } else {
-        tx.status="needs_approval";
-        tx.reason = reasons.join(" • ");
-        db.approvals.push(tx);
-        save();
-        renderApprovalBadge();
-        toast("Routed","Sent to Approvals.","warn");
-        setView("approvals");
-      }
-    });
-  }
-
-  // --- Pay screen ---
-  function stopPayTimer(){ if(payTimer){ clearInterval(payTimer); payTimer=null; } }
-  function formatCountdown(ms){
-    ms = Math.max(0, ms);
-    const s = Math.floor(ms/1000);
-    const mm = String(Math.floor(s/60)).padStart(2,"0");
-    const ss = String(s%60).padStart(2,"0");
-    return `${mm}:${ss}`;
-  }
-
-  function renderPay(root, txId){
-    const tx = getTx(txId);
-    if(!tx){
-      root.innerHTML = `<div class="card"><h4>Nothing to pay</h4><p>Create a purchase first.</p></div>`;
-      return;
-    }
-
-    const expired = Date.now() > Date.parse(tx.payExpiresAt || 0);
-    const statusTag = tx.status==="paid" ? "good" : expired ? "bad" : "warn";
-
-    root.innerHTML = `
-      <div class="grid">
-        <div class="card" style="grid-column: span 7">
-          <div class="spark"></div>
-          <h4>Approved purchase</h4>
-          <div class="metric">${money(tx.amount)}</div>
-          <p>${tx.merchant} • ${tx.category} • <span class="mono">${tx.job || "—"}</span></p>
-          <div class="spacer"></div>
-
-          <div class="hint">
-            <div class="spark2">⏱️</div>
-            <div>
-              <div><b>Authorization window</b></div>
-              <div class="muted">Complete payment before it closes. (Demo simulates card controls / wallet token unlock.)</div>
-            </div>
-          </div>
-
-          <div class="spacer"></div>
-
-          <div class="ctaRow">
-            <button class="btn primary" id="btnTapPay" ${expired || tx.status==="paid" ? "disabled" : ""}>
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm1 15h-2v-6h2v6Zm0-8h-2V7h2v2Z"/></svg>
-              Tap to pay (simulated)
-            </button>
-            <button class="btn" id="btnMarkPaid" ${expired || tx.status==="paid" ? "disabled" : ""}>Mark as paid</button>
-            <button class="btn danger" id="btnDecline" ${expired || tx.status==="paid" ? "disabled" : ""}>Simulate decline</button>
-          </div>
-
-          <div class="spacer"></div>
-          <div class="callout">
-            <h5>What happens in production</h5>
-            <p>After approval, ATTEST opens a <b>just-in-time control</b> (merchant / amount / time window) on a real card token. The next authorization succeeds only within this window.</p>
-          </div>
-        </div>
-
-        <div class="card" style="grid-column: span 5">
-          <h4>Payment status</h4>
-          <div class="status">
-            <span class="tag ${statusTag}">${tx.status}</span>
-            <span class="muted">${tx.status==="paid" ? "Payment recorded." : expired ? "Window expired." : "Awaiting payment."}</span>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="mini">
-            <div><b>Approved</b>: ${fmtTime(tx.approvedAt || tx.time)}</div>
-            <div><b>Expires</b>: ${tx.payExpiresAt ? fmtTime(tx.payExpiresAt) : "—"}</div>
-            <div><b>Countdown</b>: <span class="mono" id="countdown">--:--</span></div>
-          </div>
-
-          <div class="spacer"></div>
-
-          <div class="receiptPreview">
-            <div class="previewBox" style="width:100%;height:220px" id="payReceiptBox">
-              ${tx.receipt ? `<img alt="receipt" src="${tx.receipt}">` : `<div class="mini">No receipt attached</div>`}
-            </div>
-          </div>
-
-          <div class="spacer"></div>
-          <div class="ctaRow">
-            <button class="btn" id="btnBackTx">View transactions</button>
-            <button class="btn" id="btnBackDash">Back to dashboard</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    $("#btnBackTx").onclick = ()=> setView("transactions");
-    $("#btnBackDash").onclick = ()=> setView("dashboard");
-
-    stopPayTimer();
-    function tick(){
-      const ms = Date.parse(tx.payExpiresAt || 0) - Date.now();
-      const cd = $("#countdown");
-      if(cd) cd.textContent = formatCountdown(ms);
-      if(ms<=0 && tx.status!=="paid"){
-        tx.status = "expired";
-        save();
-        stopPayTimer();
-        toast("Window expired","Payment not completed in time.","bad");
-        renderPay(root, txId);
-      }
-    }
-    tick();
-    payTimer = setInterval(tick, 250);
-
-    $("#btnTapPay")?.addEventListener("click", ()=>{
-      toast("Wallet opened","Simulating tap…","good");
-      openModal("Tap to Pay (Simulated)",
-        `<div class="hint"><div class="spark2">📲</div><div><b>In production:</b> this triggers token unlock / card control open, then the user completes the tap.</div></div>
-         <div class="spacer"></div>
-         <div class="callout"><h5>Next step</h5><p>Press <b>Mark as paid</b> to record settlement in this demo.</p></div>`,
-        [(()=>{ const b=document.createElement("button"); b.className="btn"; b.textContent="Close"; b.onclick=closeModal; return b; })()]
-      );
-    });
-
-    $("#btnMarkPaid")?.addEventListener("click", ()=>{
-      tx.status = "paid";
-      tx.paidAt = new Date().toISOString();
-      save();
-      stopPayTimer();
-      toast("Paid","Payment recorded successfully.","good");
-      renderPay(root, txId);
-    });
-
-    $("#btnDecline")?.addEventListener("click", ()=>{
-      toast("Declined","Authorization declined (simulated).","bad");
-      openModal("Payment Declined (Simulated)",
-        `<div class="hint"><div class="spark2">🚫</div><div><b>Common causes:</b> mismatch, over limit, window closed, token not unlocked.</div></div>
-         <div class="spacer"></div>
-         <div class="callout"><h5>What ATTEST does</h5><p>Shows a clear reason and routes to Manager when needed.</p></div>`,
-        [(()=>{ const b=document.createElement("button"); b.className="btn"; b.textContent="Close"; b.onclick=closeModal; return b; })()]
-      );
-    });
-  }
-
-  // --- approvals ---
-  function renderApprovals(root){
-    if(role!=="manager" && role!=="admin"){
-      root.innerHTML = `
-        <div class="callout">
-          <h5>Manager role required</h5>
-          <p>Switch to <b>Manager</b> to review approvals. (Admin can also review in this demo.)</p>
-          <div class="spacer"></div>
-          <button class="btn" id="goManager">Switch to Manager</button>
-        </div>
-      `;
-      $("#goManager").onclick = ()=> setRole("manager");
-      return;
-    }
-
-    if(db.approvals.length===0){
-      root.innerHTML = `<div class="card"><h4>No approvals waiting</h4><p>Flagged purchases will appear here.</p></div>`;
-      return;
-    }
-
-    db.approvals.slice().reverse().forEach(a=>{
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerHTML = `
-        <div class="split">
-          <div>
-            <h4>${a.merchant}</h4>
-            <p>${money(a.amount)} • ${a.category} • <span class="mono">${a.job || "—"}</span></p>
-            <p><span class="tag warn">Policy</span> ${a.reason}</p>
-          </div>
-          <div class="ctaRow">
-            <button class="btn small" data-view="${a.id}">View</button>
-            <button class="btn small" data-approve="${a.id}">Approve</button>
-            <button class="btn small danger" data-reject="${a.id}">Reject</button>
-          </div>
-        </div>
-      `;
-      root.appendChild(div);
-    });
-
-    root.querySelectorAll("[data-view]").forEach(b=> b.addEventListener("click", ()=> showApproval(+b.dataset.view)));
-    root.querySelectorAll("[data-approve]").forEach(b=> b.addEventListener("click", ()=> approve(+b.dataset.approve)));
-    root.querySelectorAll("[data-reject]").forEach(b=> b.addEventListener("click", ()=> reject(+b.dataset.reject)));
-  }
-
-  function showApproval(id){
-    const a = db.approvals.find(x=>x.id===id);
-    if(!a) return;
-    const receipt = a.receipt ? `<div class="previewBox" style="width:100%;height:260px"><img alt="receipt" src="${a.receipt}"></div>`
-                              : `<div class="previewBox" style="width:100%;height:120px"><div class="mini">No receipt</div></div>`;
-    const body = `
-      <div class="split">
-        <div>
-          <h4 style="margin:0">${a.merchant}</h4>
-          <p class="muted" style="margin:6px 0 0">${money(a.amount)} • ${a.category} • ${fmtTime(a.time)}</p>
-          <div class="spacer"></div>
-          <div class="hint"><div class="spark2">🛡️</div><div><b>Policy flag:</b> ${a.reason}</div></div>
-        </div>
-      </div>
-      <div class="spacer"></div>
-      ${receipt}
-    `;
-
-    const ok = document.createElement("button");
-    ok.className="btn primary";
-    ok.textContent="Approve";
-    ok.onclick = ()=>{ approve(id); closeModal(); };
-
-    const no = document.createElement("button");
-    no.className="btn danger";
-    no.textContent="Reject";
-    no.onclick = ()=>{ reject(id); closeModal(); };
-
-    const close = document.createElement("button");
-    close.className="btn";
-    close.textContent="Close";
-    close.onclick = closeModal;
-
-    openModal("Approval review", body, [close, no, ok]);
-  }
-
-  function approve(id){
-    const idx = db.approvals.findIndex(x=>x.id===id);
-    if(idx<0) return;
-    const a = db.approvals.splice(idx,1)[0];
-    a.status="approved_unpaid";
-    a.approvedAt = new Date().toISOString();
-    a.payWindowSeconds = 10 * 60;
-    a.payExpiresAt = new Date(Date.now() + a.payWindowSeconds*1000).toISOString();
-    db.tx.push(a);
-    save();
-    renderApprovalBadge();
-    toast("Approved","Manager approved. Payment window opened.","good");
-    setView("pay", {txId: a.id});
-  }
-
-  function reject(id){
-    const before = db.approvals.length;
-    db.approvals = db.approvals.filter(x=>x.id!==id);
-    if(db.approvals.length===before) return;
-    save();
-    renderApprovalBadge();
-    toast("Rejected","Purchase rejected.","bad");
-    renderCurrentView();
-  }
-
-  // --- transactions ---
-  function renderTransactions(root){
-    if(db.tx.length===0){
-      root.innerHTML = `<div class="card"><h4>No transactions yet</h4><p>Create a purchase to populate the ledger.</p></div>`;
-      return;
-    }
-    const rev = db.tx.slice().reverse();
-    const rows = rev.map(t=>`
-      <tr>
-        <td>${t.merchant}</td>
-        <td class="right">${money(t.amount)}</td>
-        <td><span class="tag ${t.status==="paid"?"good":t.status==="expired"?"bad":t.status==="approved_unpaid"?"warn":"warn"}">${t.status}</span></td>
-        <td class="nowrap">${fmtTime(t.time)}</td>
-      </tr>
-    `).join("");
-
-    root.innerHTML = `
-      <table class="table">
-        <thead><tr><th>Merchant</th><th class="right">Amount</th><th>Status</th><th>Time</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div class="spacer"></div>
-      <div class="hint">
-        <div class="spark2">💳</div>
-        <div><b>Tip:</b> Tap a row to open the Pay screen.</div>
-      </div>
-    `;
-
-    root.querySelectorAll("tbody tr").forEach((tr, idx)=>{
-      const tx = rev[idx];
-      tr.style.cursor = "pointer";
-      tr.addEventListener("click", ()=> setView("pay", {txId: tx.id}));
-    });
-  }
-
-  // --- policies ---
-  function renderPolicies(root){
-    if(role!=="admin"){
-      root.innerHTML = `
-        <div class="callout">
-          <h5>Admin role required</h5>
-          <p>Switch to <b>Admin</b> to edit policies in this demo.</p>
-          <div class="spacer"></div>
-          <button class="btn" id="goAdmin">Switch to Admin</button>
-        </div>
-      `;
-      $("#goAdmin").onclick = ()=> setRole("admin");
-      return;
-    }
-
-    root.innerHTML = `
-      <div class="card">
-        <h4>Real-time policy engine</h4>
-        <p>Edit limits and restricted categories. Changes take effect immediately.</p>
-        <div class="divider"></div>
-        <div class="formrow">
-          <div>
-            <label>Technician spending limit</label>
-            <input class="field" id="pLimit" type="number" value="${db.policies.techLimit}"/>
-          </div>
-          <div>
-            <label>Restricted categories (comma-separated)</label>
-            <input class="field" id="pCats" value="${(db.policies.blockedCats||[]).join(", ")}"/>
-          </div>
-        </div>
-        <div class="spacer"></div>
-        <button class="btn primary" id="pSave">Save policy</button>
-      </div>
-    `;
-    $("#pSave").onclick = ()=>{
-      const lim = Number($("#pLimit").value);
-      if(!isFinite(lim) || lim<=0){ toast("Invalid limit","Enter a positive number.","bad"); return; }
-      db.policies.techLimit = lim;
-      db.policies.blockedCats = $("#pCats").value.split(",").map(s=>s.trim()).filter(Boolean);
-      save();
-      toast("Saved","Policy updated.");
-      renderCurrentView();
-    };
-  }
-
-  // --- settings ---
-  function renderSettings(root){
-    root.innerHTML = `
-      <div class="card">
-        <h4>Demo controls</h4>
-        <p>Reset clears local demo data stored on this device.</p>
-        <div class="divider"></div>
-        <button class="btn danger" id="hardReset">Reset demo data</button>
-        <div class="spacer"></div>
-        <button class="btn" id="exportNow">Export ledger</button>
-        <div class="help">Exports approved transactions as JSON for audit / compliance workflows.</div>
-      </div>
-    `;
-    $("#hardReset").onclick = ()=>{ localStorage.removeItem("attest_db"); location.reload(); };
-    $("#exportNow").onclick = ()=> exportLedger();
-  }
-
-  // --- export ---
-  function exportLedger(){
-    const blob = new Blob([JSON.stringify(db.tx, null, 2)], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "attest-ledger.json";
-    a.click();
-    toast("Exported","Ledger downloaded as JSON.");
-  }
-
-  // --- help / simulate ---
-  function showHelp(){
-    const body = `
-      <div class="hint"><div class="spark2">👋</div><div><b>Flow:</b> New Purchase → Capture receipt → Submit → <b>Pay</b>.</div></div>
-      <div class="spacer"></div>
-      <div class="hint"><div class="spark2">🛡️</div><div><b>Approvals:</b> Use a big amount or Electronics to route to Manager.</div></div>
-      <div class="spacer"></div>
-      <div class="hint"><div class="spark2">💳</div><div><b>Pay screen:</b> Simulates wallet tap + “Mark as paid” for settlement.</div></div>
-    `;
-    const close = document.createElement("button");
-    close.className="btn";
-    close.textContent="Close";
-    close.onclick = closeModal;
-    openModal("Quick tour", body, [close]);
-  }
-
-  function simulatePolicyBlock(){
-    const body = `
-      <div class="callout">
-        <h5>Simulate a flagged purchase</h5>
-        <p>This will create a purchase that routes to Approvals.</p>
-      </div>
-    `;
-    const go = document.createElement("button");
-    go.className="btn primary";
-    go.textContent="Create flagged purchase";
-    go.onclick = ()=>{
-      const tx = {
-        id: Date.now(),
-        merchant: "Best Buy",
-        amount: db.policies.techLimit + 50,
-        category: "Electronics",
-        job: "Site 7 • Emergency",
-        receipt: null,
-        time: new Date().toISOString(),
-        status: "needs_approval",
-        reason: `Amount exceeds technician limit (${money(db.policies.techLimit)}) • Electronics requires manager approval`
-      };
-      db.approvals.push(tx); save(); renderApprovalBadge(); closeModal();
-      toast("Created","Flagged purchase added to Approvals.","warn");
-      setView("approvals");
-    };
-    const cancel = document.createElement("button");
-    cancel.className="btn";
-    cancel.textContent="Cancel";
-    cancel.onclick = closeModal;
-    openModal("Policy test", body, [cancel, go]);
-  }
-
-  $("#orgPillText") && ($("#orgPillText").textContent = $("#orgName")?.textContent || "Northstar Facilities");
-
-  renderApprovalBadge();
-  setRole("tech");
-  setView("dashboard");
-})();
+  },120);
+};
+
+// approval
+document.getElementById('approveBtn').onclick=()=>{
+  document.getElementById('recognizedCard').classList.add('hidden');
+  document.getElementById('activeCard').classList.remove('hidden');
+  startTimer();
+};
+
+// timer
+let remaining=600, t;
+function startTimer(){
+  t=setInterval(()=>{
+    remaining--;
+    const m=Math.floor(remaining/60);
+    const s=(remaining%60).toString().padStart(2,'0');
+    document.getElementById('timer').textContent=`${m}:${s}`;
+    if(remaining<=0){clearInterval(t);location.reload();}
+  },1000);
+}
+
+// tap to pay
+document.getElementById('tapBtn').onclick=()=>{
+  document.getElementById('wallet').style.display='flex';
+  if(navigator.vibrate) navigator.vibrate([40,60,40]);
+  setTimeout(()=>{
+    document.getElementById('wallet').style.display='none';
+    document.getElementById('activeCard').classList.add('hidden');
+    document.getElementById('doneCard').classList.remove('hidden');
+    clearInterval(t);
+  },2200);
+};
 </script>
-
 </body>
 </html>
