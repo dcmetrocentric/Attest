@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<title>ATTEST — Demo</title>
+<style>
+:root{
+  --bg1:#0b1220; --bg2:#0e1730;
+  --card:#121b31; --card2:#0f172a;
+  --text:#eaf0ff; --muted:#a7b6da;
+  --indigo:#4f46e5; --cyan:#06b6d4; --green:#22c55e; --amber:#f59e0b; --red:#ef4444;
+  --shadow: 0 22px 46px rgba(0,0,0,.38);
+  --radius:22px;
+}
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+body{margin:0;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:var(--text)}
+a{color:inherit}
+#app{min-height:100vh;display:flex;flex-direction:column}
+header{
+  position:sticky;top:0;z-index:10;
+  padding:14px 16px 10px;
+  backdrop-filter: blur(10px);
+  background: rgba(11,18,32,.72);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--indigo),#7c8cff);display:grid;place-items:center;box-shadow:0 10px 24px rgba(79,70,229,.35)}
+.mark:before{content:"✓";font-weight:900}
+.brand span{font-weight:800;letter-spacing:.6px}
+.container{padding:16px 16px 24px;max-width:520px;margin:0 auto;width:100%}
+.card{background:rgba(18,27,49,.92);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between}
+.h1{font-size:24px;font-weight:900;letter-spacing:-.2px}
+.h2{font-size:18px;font-weight:800}
+.small{font-size:12px;color:var(--muted)}
+.muted{color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);padding:8px 10px;border-radius:999px;font-weight:700;font-size:13px}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.pill.warn .dot{background:var(--amber)}
+.pill.bad .dot{background:var(--red)}
+hr{border:none;border-top:1px solid rgba(255,255,255,.08);margin:14px 0}
+.btn{
+  width:100%;border:none;border-radius:16px;padding:14px 14px;font-size:16px;font-weight:900;
+  color:white;background:var(--indigo);box-shadow:0 12px 26px rgba(79,70,229,.25);
+}
+.btn.secondary{background:#223057;box-shadow:none}
+.btn.green{background:var(--green);box-shadow:0 12px 26px rgba(34,197,94,.22)}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.12);box-shadow:none}
+.btn:active{transform:translateY(1px)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.list{display:flex;flex-direction:column;gap:10px}
+.tx{
+  display:flex;gap:12px;align-items:flex-start;justify-content:space-between;
+  padding:12px;border-radius:18px;border:1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.03);
+}
+.tx .left{display:flex;flex-direction:column;gap:4px}
+.badge{
+  font-size:12px;font-weight:900;padding:6px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;
+  border:1px solid rgba(255,255,255,.10)
+}
+.badge .dot{width:8px;height:8px;border-radius:50%}
+.badge.approved{background:rgba(34,197,94,.12)} .badge.approved .dot{background:var(--green)}
+.badge.pending{background:rgba(245,158,11,.12)} .badge.pending .dot{background:var(--amber)}
+.badge.declined{background:rgba(239,68,68,.12)} .badge.declined .dot{background:var(--red)}
+.kv{display:flex;flex-direction:column;gap:3px}
+.kv b{font-size:14px}
+.kv span{font-size:12px;color:var(--muted)}
+/* screens */
+.screen{display:none}
+.screen.active{display:block}
+/* Camera */
+.camWrap{position:relative;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#000;box-shadow:var(--shadow)}
+video{width:100%;height:56vh;max-height:520px;object-fit:cover;display:block}
+.scanOverlay{
+  position:absolute;inset:0;pointer-events:none;
+  background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.06), rgba(0,0,0,.45) 70%);
+}
+.scanBox{
+  position:absolute;left:12%;right:12%;top:22%;height:46%;
+  border-radius:22px;border:2px solid rgba(255,255,255,.28)
+}
+.scanLine{
+  position:absolute;left:14%;right:14%;top:26%;
+  height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+  filter: drop-shadow(0 0 10px rgba(6,182,212,.65));
+  animation: sweep 1.8s ease-in-out infinite;
+}
+@keyframes sweep{0%{transform:translateY(0)}50%{transform:translateY(220px)}100%{transform:translateY(0)}}
+.sheet{
+  margin-top:-18px; position:relative;
+}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{
+  padding:10px 12px;border-radius:999px;font-weight:800;font-size:13px;
+  border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04)
+}
+.chip strong{color:var(--cyan)}
+.preview{
+  width:100%;border-radius:18px;border:1px solid rgba(255,255,255,.10);overflow:hidden;background:#000;
+}
+.preview img{width:100%;display:block}
+.timer{font-size:44px;font-weight:1000;letter-spacing:-1px}
+.walletDim{
+  position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:50;
+}
+.walletCard{
+  width:300px;height:180px;border-radius:26px;background:linear-gradient(135deg,var(--indigo),#7c8cff);
+  box-shadow:0 18px 48px rgba(0,0,0,.6);
+  display:flex;align-items:flex-end;padding:18px;font-weight:900
+}
+.success{font-size:28px;font-weight:1000;margin-top:14px}
+
+.lineItems{margin-top:10px;border:1px solid rgba(255,255,255,.10);border-radius:14px;overflow:hidden}
+.lineItem{display:flex;gap:10px;align-items:center;padding:10px 12px;background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.08)}
+.lineItem:first-child{border-top:none}
+.liThumb{width:42px;height:42px;border-radius:10px;object-fit:cover;border:1px solid rgba(255,255,255,.10)}
+.liMain{flex:1;min-width:0}
+.liTitle{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.liMeta{font-size:12px;color:var(--muted)}
+.liPrice{font-weight:800}
+.smallBtn{width:auto;padding:8px 10px;border-radius:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:420px){.grid3{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+<div class="brand"><div class="mark"></div><span>ATTEST</span></div>
+</header>
+<div class="container">
+<!-- DASHBOARD -->
+<section class="screen active" id="dash">
+<div class="card">
+<div class="row">
+<div>
+<div class="h1">Hi, Jordan 👋</div>
+<div class="small">Field Tech • North Region • Work Card • **** 1842</div>
+</div>
+<div class="pill"><span class="dot"></span>Policy: <span id="policyName">Field Ops — Standard</span></div>
+</div>
+<hr/>
+<div class="grid2">
+<div class="kv">
+<b>Today’s spend</b><span id="todaysSpend">$82.40</span>
+</div>
+<div class="kv">
+<b>Available today</b><span id="avail">$250.00</span>
+</div>
+<div class="kv">
+<b>Auto-approve</b><span>Hardware, fuel, supplies</span>
+</div>
+<div class="kv">
+<b>Needs approval</b><span>Electronics, tools &gt; $200</span>
+</div>
+</div>
+<hr/>
+<button class="btn" id="newPurchaseBtn">New Purchase</button>
+<div class="grid2" style="margin-top:10px">
+<button class="btn ghost" id="viewPolicyBtn">View Policy</button>
+<button class="btn secondary" id="refreshBtn">Refresh</button>
+</div>
+</div>
+<div style="height:14px"></div>
+<div class="card">
+<div class="row">
+<div class="h2">Recent transactions</div>
+<div class="small" id="txCount">0</div>
+</div>
+<div style="height:10px"></div>
+<div class="list" id="txList"></div>
+</div>
+</section>
+<!-- POLICY VIEW -->
+<section class="screen" id="policy">
+<div class="card">
+<div class="row">
+<div>
+<div class="h1">Policy</div>
+<div class="small" id="policySubtitle">Field Ops — Standard (Auto-approve rules)</div>
+</div>
+<button class="btn secondary" id="backDash1" style="width:auto;padding:10px 12px;border-radius:14px">Back</button>
+</div>
+<hr/>
+<div class="h2">Auto-approved</div>
+<div class="chips">
+<div class="chip">Hardware</div>
+<div class="chip">Fuel</div>
+<div class="chip">Safety supplies</div>
+<div class="chip">Parking/Tolls</div>
+</div>
+<div style="height:14px"></div>
+<div class="h2">Requires manager approval</div>
+<div class="chips">
+<div class="chip">Electronics</div>
+<div class="chip">Tools <strong>&gt; $200</strong></div>
+<div class="chip">New vendors</div>
+</div>
+<div style="height:14px"></div>
+<div class="h2">Hard blocks</div>
+<div class="chips">
+<div class="chip">Gift cards</div>
+<div class="chip">Alcohol</div>
+<div class="chip">Cash equivalents</div>
+</div>
+<hr/>
+<div class="small">In production, these rules live in a centralized policy engine (OPA/Rego-style) with audit-ready evidence.</div>
+</div>
+</section>
+<!-- PURCHASE: CAMERA -->
+<section class="screen" id="purchase">
+<div class="camWrap">
+<video autoplay="" id="cam" muted="" playsinline=""></video>
+<div class="scanOverlay"></div>
+<div class="scanBox"></div>
+<div class="scanLine"></div>
+</div>
+<div class="sheet">
+<div class="card">
+<div class="row">
+<div>
+<div class="h1">What are you buying?</div>
+<div class="small">Point at the item or receipt, then tap Capture</div>
+</div>
+<button class="btn secondary" id="cancelPurchase" style="width:auto;padding:10px 12px;border-radius:14px">Cancel</button>
+</div>
+<div class="grid2" style="margin-top:12px">
+<button class="btn green" id="captureBtn">Capture</button>
+<label class="btn ghost" style="display:flex;align-items:center;justify-content:center;cursor:pointer">
+              Upload
+              <input accept="image/*" capture="environment" id="fileInput" style="display:none" type="file"/>
+</label>
+</div>
+<div class="small" style="margin-top:10px">
+            Tip: On GitHub Pages, camera requires HTTPS and user permission. Upload works everywhere.
+          </div>
+</div>
+</div>
+<canvas class="hidden" id="canvas"></canvas>
+</section>
+<!-- REVIEW / DETECTION -->
+<section class="screen" id="review">
+<div class="card">
+<div class="row">
+<div>
+<div class="h1">We found this</div>
+<div class="small">Real capture + (optional) barcode detection</div>
+</div>
+<button class="btn secondary" id="backToCam" style="width:auto;padding:10px 12px;border-radius:14px">Back</button>
+</div>
+<div style="height:12px"></div>
+<div class="preview"><img alt="Captured image" id="shot"/></div>
+<div style="height:12px"></div>
+<div class="chips" id="detectedChips"></div>
+<hr/>
+<div class="grid3"><button class="btn secondary" id="editBtn">Edit details</button><button class="btn ghost" id="addItemBtn">Add item</button><button class="btn green" id="continueBtn">Proceed</button></div>
+</div>
+</section>
+<!-- DETAILS (quick edit) -->
+<section class="screen" id="details">
+<div class="card">
+<div class="row">
+<div>
+<div class="h1">Purchase details</div>
+<div class="small">Fast, friendly confirmation — not a form.</div>
+</div>
+<button class="btn secondary" id="backReview" style="width:auto;padding:10px 12px;border-radius:14px">Back</button>
+</div>
+<hr/>
+<div class="kv"><b>Merchant</b><span id="mMerchant">Home Depot</span></div>
+<div style="height:10px"></div>
+<div class="kv"><b>Category</b><span id="mCategory">Hardware</span></div>
+<div style="height:10px"></div>
+<div class="kv"><b>Amount</b><span id="mAmount">$42.50</span></div>
+<div style="height:14px"></div><div class="h2">Items in this purchase</div><div class="lineItems" id="lineItems"></div>
+<div class="h2">Quick changes</div>
+<div class="chips">
+<div class="chip" data-amount="42.50" data-category="Hardware" data-merchant="Home Depot">Home Depot • Hardware</div>
+<div class="chip" data-amount="36.20" data-category="Fuel" data-merchant="Shell">Shell • Fuel</div>
+<div class="chip" data-amount="58.10" data-category="Hardware" data-merchant="Lowe’s">Lowe’s • Hardware</div>
+<div class="chip" data-amount="219.00" data-category="Electronics" data-merchant="Best Buy">Best Buy • Electronics</div>
+</div>
+<hr/>
+<button class="btn ghost" id="addMoreItemsBtn">Add more items</button><div style="height:10px"></div><button class="btn green" id="checkPolicyBtn">Check policy</button>
+</div>
+</section>
+<!-- POLICY CHECK RESULT -->
+<section class="screen" id="decision">
+<div class="card center">
+<div>
+<div class="h1" id="decisionTitle">Checking policy…</div>
+<div class="small" id="decisionSub">One moment</div>
+<div style="height:14px"></div>
+<div class="pill" id="decisionPill"><span class="dot"></span><span id="decisionPillText">Analyzing</span></div>
+<div style="height:18px"></div>
+<button class="btn green hidden" id="activateBtn">Activate work card</button>
+<button class="btn secondary hidden" id="needApprovalBtn">Request manager approval</button>
+<button class="btn secondary hidden" id="blockedBtn">Back to details</button>
+</div>
+</div>
+</section>
+<!-- ACTIVE CARD -->
+<section class="screen" id="active">
+<div class="card center">
+<div>
+<div class="h1">Your work card is ready</div>
+<div class="small">Tap your phone to pay</div>
+<div style="height:12px"></div>
+<div class="timer" id="timer">10:00</div>
+<button class="btn" id="tapPayBtn">Tap to Pay</button>
+<button class="btn ghost" id="cancelWindowBtn">Cancel</button>
+</div>
+</div>
+</section>
+<!-- DONE -->
+<section class="screen" id="done">
+<div class="card center">
+<div>
+<div class="h1">All set 👍</div>
+<div class="small">Transaction logged • Receipt linked<br/>No expense report needed</div>
+<div style="height:18px"></div>
+<button class="btn green" id="backHomeBtn">Back to home</button>
+</div>
+</div>
+</section>
+</div>
+</div>
+<div class="walletDim" id="wallet">
+<div class="walletCard">ATTEST • Work Card</div>
+<div class="success">Payment Authorized</div>
+<div class="small">Receipt automatically recorded</div>
+</div>
+<script>
+/** ---------- Demo state ---------- **/
+const state = {
+  cart: [],
+  purchaseMerchant: \"\",
+  purchaseCategory: \"\",
+
+  user: { name:"Jordan", role:"Field Tech", region:"North Region", last4:"1842" },
+  policy: {
+    name:"Field Ops — Standard",
+    autoApproved:["Hardware","Fuel","Safety supplies","Parking/Tolls"],
+    requiresApproval:["Electronics","Tools > $200","New vendors"],
+    blocked:["Gift cards","Alcohol","Cash equivalents"],
+    dailyLimit:250,
+    todaySpend:82.40
+  },
+  draft: { merchant:"Home Depot", category:"Hardware", amount:42.50, evidenceUrl:"" },
+  tx: [
+    { id:"T-1042", merchant:"7‑Eleven", category:"Fuel", amount:28.40, status:"approved", when:"Today 9:18 AM" },
+    { id:"T-1041", merchant:"Home Depot", category:"Hardware", amount:54.00, status:"approved", when:"Yesterday 3:02 PM" },
+    { id:"T-1040", merchant:"Best Buy", category:"Electronics", amount:219.00, status:"pending", when:"Yesterday 11:21 AM" },
+  ]
+};
+
+const $ = (id)=>document.getElementById(id);
+function money(x){ return "$" + Number(x).toFixed(2); }
+function setScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo({top:0,behavior:"instant"});
+}
+function renderDashboard(){
+  $("policyName").textContent = state.policy.name;
+  $("policySubtitle").textContent = state.policy.name + " (Auto-approve rules)";
+  $("todaysSpend").textContent = money(state.policy.todaySpend);
+  $("avail").textContent = money(Math.max(0, state.policy.dailyLimit - state.policy.todaySpend));
+  $("txCount").textContent = state.tx.length + " items";
+
+  const list = $("txList");
+  list.innerHTML = "";
+  state.tx.slice(0,6).forEach(t=>{
+    const div = document.createElement("div");
+    div.className = "tx";
+    const left = document.createElement("div"); left.className="left";
+    left.innerHTML = `<div style="font-weight:900">${t.merchant} <span class="muted" style="font-weight:700">• ${t.category}</span></div>
+                      <div class="small">${t.when} • ${t.id}</div>`;
+    const right = document.createElement("div");
+    const badge = document.createElement("div");
+    badge.className = "badge " + t.status;
+    badge.innerHTML = `<span class="dot"></span>${t.status.charAt(0).toUpperCase()+t.status.slice(1)}`;
+    right.innerHTML = `<div style="font-weight:1000;text-align:right">${money(t.amount)}</div>`;
+    right.appendChild(badge);
+    div.appendChild(left); div.appendChild(right);
+    list.appendChild(div);
+  });
+}
+renderDashboard();
+
+/** ---------- Navigation ---------- **/
+$("newPurchaseBtn").onclick = ()=>{ state.cart = []; state.purchaseMerchant=""; state.purchaseCategory=""; setScreen("purchase"); startCamera(); };
+$("viewPolicyBtn").onclick = ()=> setScreen("policy");
+$("backDash1").onclick = ()=> setScreen("dash");
+$("refreshBtn").onclick = ()=> { // friendly demo randomization
+  const bump = (Math.random()*12).toFixed(2);
+  state.policy.todaySpend += Number(bump);
+  renderDashboard();
+  if(navigator.vibrate) navigator.vibrate(20);
+};
+
+/** ---------- Camera capture ---------- **/
+let stream;
+async function startCamera(){
+  const video = $("cam");
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}, audio:false});
+    video.srcObject = stream;
+  }catch(e){
+    console.log("Camera unavailable:", e);
+  }
+}
+
+function stopCamera(){
+  try{
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  }catch(e){}
+}
+
+function showReview(dataUrl){
+  state.draft.evidenceUrl = dataUrl;
+  $("shot").src = dataUrl;
+  buildDetectedChips(); 
+  setScreen("review");
+}
+
+$("captureBtn").onclick = ()=>{
+  const video = $("cam");
+  if(!video.videoWidth){
+    alert("Camera not available. Try Upload instead.");
+    return;
+  }
+  const canvas = $("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video,0,0);
+  const dataUrl = canvas.toDataURL("image/jpeg",0.85);
+  showReview(dataUrl);
+  stopCamera();
+  if(navigator.vibrate) navigator.vibrate([30,50,30]);
+};
+
+$("cancelPurchase").onclick = ()=>{
+  stopCamera();
+  setScreen("dash");
+};
+
+$("fileInput").addEventListener("change",(e)=>{
+  const file = e.target.files?.[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  // Load into img then to dataurl for consistent preview
+  const img = new Image();
+  img.onload = ()=>{
+    const canvas = $("canvas");
+    canvas.width = img.width; canvas.height = img.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img,0,0);
+    const dataUrl = canvas.toDataURL("image/jpeg",0.88);
+    showReview(dataUrl);
+    URL.revokeObjectURL(url);
+    if(navigator.vibrate) navigator.vibrate(40);
+  };
+  img.src = url;
+});
+
+$("backToCam").onclick = ()=>{ setScreen("purchase"); startCamera(); };
+$("editBtn").onclick = ()=>{ setScreen("details"); syncDetails(); };\n$("addItemBtn").onclick = ()=>{ addDraftToCart(); setScreen("purchase"); startCamera(); };
+$("continueBtn").onclick = ()=>{ addDraftToCart(); setScreen("details"); syncDetails(); };
+$("backReview").onclick = ()=> setScreen("review");
+
+function syncDetails(){
+  // Details screen represents the entire purchase (possibly multi-item)
+  recomputePurchaseSummary();
+  const merch = state.purchaseMerchant || state.draft.merchant;
+  const cat = state.purchaseCategory || state.draft.category;
+  $("mMerchant").textContent = merch;
+  $("mCategory").textContent = cat;
+  renderCart();
+  updateTotals();
+}
+
+/** ---------- “Real” detection (BarcodeDetector if supported) ---------- **/
+async function detectBarcode(){
+  if(!("BarcodeDetector" in window)) return null;
+  try{
+    const detector = new BarcodeDetector({formats:["qr_code","code_128","ean_13","ean_8","upc_a","upc_e","pdf417"]});
+    const img = $("shot");
+    // draw into canvas
+    const canvas = $("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+    ctx.drawImage(img,0,0);
+    const bitmap = await createImageBitmap(canvas);
+    const codes = await detector.detect(bitmap);
+    if(codes && codes.length){
+      return codes[0].rawValue || "barcode detected";
+    }
+  }catch(e){
+    console.log("Barcode detect failed", e);
+  }
+  return null;
+}
+
+function buildDetectedChips(){
+  const chips = $("detectedChips");
+  chips.innerHTML = "";
+
+  // Always show evidence is captured (real)
+  chips.appendChild(chipEl("📷 Evidence captured", "Photo stored for audit"));
+
+  // "Soft" merchant/category guess (demo)
+  chips.appendChild(chipEl("🏬 Merchant guess", state.draft.merchant));
+  chips.appendChild(chipEl("🏷️ Category guess", state.draft.category));
+  chips.appendChild(chipEl("💵 Amount guess", money(state.draft.amount)));
+
+  // Try barcode detection and add if found
+  detectBarcode().then(val=>{
+    if(val){
+      chips.appendChild(chipEl("🔎 Barcode found", val.slice(0,28) + (val.length>28?"…":"")));
+      // fun: if QR contains "bestbuy" adjust guess
+      const lower = val.toLowerCase();
+      if(lower.includes("bestbuy")){
+        state.draft.merchant="Best Buy"; state.draft.category="Electronics"; state.draft.amount=219.00;
+      }
+      syncDetails();
+    } else {
+      chips.appendChild(chipEl("🔎 Barcode", "None detected (ok)"));
+    }
+  });
+}
+
+function chipEl(label, value){
+  const d = document.createElement("div");
+  d.className = "chip";
+  d.innerHTML = `<strong>${label}</strong><div style="height:6px"></div>${value}`;
+  d.style.borderRadius="18px";
+  d.style.padding="12px 12px";
+  d.style.maxWidth="100%";
+  d.style.flex="1 1 160px";
+  return d;
+}
+
+// Quick change chips
+document.querySelectorAll(".chip[data-merchant]").forEach(ch=>{
+  ch.addEventListener("click", ()=>{
+    state.draft.merchant = ch.dataset.merchant;
+    state.draft.category = ch.dataset.category;
+    state.draft.amount = Number(ch.dataset.amount);
+    // If items already in cart, apply quick change to the most recent item (demo-friendly)
+    if(state.cart && state.cart.length){
+      const last = state.cart[state.cart.length-1];
+      last.merchant = state.draft.merchant;
+      last.category = state.draft.category;
+      last.amount = state.draft.amount;
+      last.title = (state.draft.category ? state.draft.category + " item" : "Item");
+      recomputePurchaseSummary();
+    }
+    syncDetails();
+    if(navigator.vibrate) navigator.vibrate(20);
+  });
+});
+
+/** ---------- Policy decision ---------- **/
+$("addMoreItemsBtn").onclick = ()=>{ setScreen("purchase"); startCamera(); };\n\n$("checkPolicyBtn").onclick = ()=>{
+  setScreen("decision");
+  runDecision();
+};
+
+function runDecision(){
+  // reset buttons
+  $("activateBtn").classList.add("hidden");
+  $("needApprovalBtn").classList.add("hidden");
+  $("blockedBtn").classList.add("hidden");
+  const pill = $("decisionPill");
+  pill.className = "pill";
+  $("decisionTitle").textContent = "Checking policy…";
+  $("decisionSub").textContent = "One moment";
+  $("decisionPillText").textContent = "Analyzing";
+
+  // simulate decision time
+  setTimeout(()=>{
+    const cat = state.draft.category;
+    const amt = state.draft.amount;
+
+    const blocked = state.policy.blocked.map(x=>x.toLowerCase());
+    if(blocked.includes(cat.toLowerCase())){
+      pill.classList.add("bad");
+      $("decisionTitle").textContent = "Blocked";
+      $("decisionSub").textContent = "This category is not allowed.";
+      $("decisionPillText").textContent = "Denied";
+      $("blockedBtn").classList.remove("hidden");
+      return;
+    }
+
+    // requires approval if in list or high dollar tool/electronics
+    const req = state.policy.requiresApproval.map(x=>x.toLowerCase());
+    const needsApproval = req.some(r=>cat.toLowerCase().includes(r.split(" ")[0])) || (cat==="Electronics") || (cat==="Tools" && amt>200) || (amt>200 && cat==="Hardware" && state.draft.merchant==="Best Buy");
+    if(needsApproval){
+      pill.classList.add("warn");
+      $("decisionTitle").textContent = "Needs approval";
+      $("decisionSub").textContent = "We’ll route to your manager (demo).";
+      $("decisionPillText").textContent = "Pending";
+      $("needApprovalBtn").classList.remove("hidden");
+      return;
+    }
+
+    pill.classList.add("good");
+    $("decisionTitle").textContent = "Looks good — covered";
+    $("decisionSub").textContent = "Auto-approved under your policy.";
+    $("decisionPillText").textContent = "Approved";
+    $("activateBtn").classList.remove("hidden");
+    if(navigator.vibrate) navigator.vibrate(30);
+  }, 900);
+}
+
+$("blockedBtn").onclick = ()=> setScreen("details");
+
+$("needApprovalBtn").onclick = ()=>{
+  // Add a pending transaction and return home
+  addTransaction("pending");
+  setScreen("done");
+  $("backHomeBtn").textContent = "Back to home";
+};
+
+$("activateBtn").onclick = ()=>{
+  setScreen("active");
+  startTimer();
+};
+
+/** ---------- Active payment window ---------- **/
+let remaining=600, timerInt=null;
+function startTimer(){
+  remaining=600;
+  $("timer").textContent="10:00";
+  if(timerInt) clearInterval(timerInt);
+  timerInt=setInterval(()=>{
+    remaining--;
+    const m=Math.floor(remaining/60);
+    const s=String(remaining%60).padStart(2,"0");
+    $("timer").textContent = `${m}:${s}`;
+    if(remaining<=0){
+      clearInterval(timerInt);
+      timerInt=null;
+      // window expired
+      setScreen("dash");
+      renderDashboard();
+    }
+  },1000);
+}
+$("cancelWindowBtn").onclick = ()=>{
+  if(timerInt) clearInterval(timerInt);
+  timerInt=null;
+  setScreen("dash");
+  renderDashboard();
+};
+
+$("tapPayBtn").onclick = ()=>{
+  $("wallet").style.display="flex";
+  if(navigator.vibrate) navigator.vibrate([35,55,35]);
+  setTimeout(()=>{
+    $("wallet").style.display="none";
+    if(timerInt) clearInterval(timerInt);
+    timerInt=null;
+    addTransaction("approved");
+    setScreen("done");
+  }, 2100);
+};
+
+/** ---------- Transactions ---------- **/
+function addTransaction(status){
+  const idNum = 1043 + Math.floor(Math.random()*50);
+  const now = new Date();
+  const when = "Just now";
+  state.tx.unshift({
+    id:"T-"+idNum,
+    merchant: state.draft.merchant,
+    category: state.draft.category,
+    amount: state.draft.amount,
+    status,
+    when
+  });
+  // update spend if approved
+  if(status==="approved"){
+    state.policy.todaySpend += state.draft.amount;
+  }
+  renderDashboard();
+}
+
+$("backHomeBtn").onclick = ()=>{
+  setScreen("dash");
+  renderDashboard();
+};
+function currency(n){return "$" + (Math.round(n*100)/100).toFixed(2);}
+function sumCart(){ return state.cart.reduce((s,x)=>s + (Number(x.amount)||0), 0); }
+
+function recomputePurchaseSummary(){
+  if(state.cart.length===0){
+    state.purchaseMerchant = "";
+    state.purchaseCategory = "";
+    return;
+  }
+  const merchants = [...new Set(state.cart.map(i=>i.merchant||""))].filter(Boolean);
+  const cats = [...new Set(state.cart.map(i=>i.category||""))].filter(Boolean);
+  state.purchaseMerchant = merchants.length<=1 ? (merchants[0]||state.draft.merchant) : "Multiple merchants";
+  state.purchaseCategory = cats.length<=1 ? (cats[0]||state.draft.category) : "Mixed";
+}
+
+function addDraftToCart(){
+  // Draft represents the current item the user just captured/edited
+  const item = {
+    id: "li_" + Math.random().toString(16).slice(2),
+    title: (state.draft.category ? state.draft.category + " item" : "Item"),
+    merchant: state.draft.merchant,
+    category: state.draft.category,
+    amount: Number(state.draft.amount)||0,
+    qty: 1,
+    imageData: state.draft.evidenceUrl || $("shot")?.src || ""
+  };
+  state.cart.push(item);
+  recomputePurchaseSummary();
+  renderCart();
+  updateTotals();
+  return item;
+}
+
+function removeCartItem(id){
+  state.cart = state.cart.filter(x => x.id !== id);
+  recomputePurchaseSummary();
+  renderCart();
+  updateTotals();
+}
+
+function updateTotals(){
+  const total = sumCart();
+  const amt = total || Number(state.draft.amount)||0;
+  $("mAmount").textContent = money(amt);
+  const amtEl = $("aAmount"); if(amtEl) amtEl.textContent = money(amt);
+}
+
+function renderCart(){
+  const wrap = $("lineItems");
+  if(!wrap) return;
+  wrap.innerHTML = "";
+  if(state.cart.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "lineItem";
+    empty.innerHTML = '<div class="liMain"><div class="liTitle">No items added yet</div><div class="liMeta">Use “Add item” to build a multi-item purchase</div></div>';
+    wrap.appendChild(empty);
+    return;
+  }
+  state.cart.forEach(it=>{
+    const row = document.createElement("div");
+    row.className = "lineItem";
+    const thumb = it.imageData ? `<img class="liThumb" src="${it.imageData}" alt="item"/>` : `<div class="liThumb" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:10px">IMG</div>`;
+    row.innerHTML = `
+      ${thumb}
+      <div class="liMain">
+        <div class="liTitle">${it.title || "Item"}</div>
+        <div class="liMeta">${it.category || "General"} • ${it.merchant || "Merchant"} • Qty ${it.qty || 1}</div>
+      </div>
+      <div class="liPrice">${money(Number(it.amount)||0)}</div>
+      <button class="btn secondary smallBtn" type="button">Remove</button>
+    `;
+    row.querySelector("button").addEventListener("click", ()=>removeCartItem(it.id));
+    wrap.appendChild(row);
+  });
+}
+
+
+</script>
+</body>
+</html>
