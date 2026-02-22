@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>ATTEST — Demo</title>
 <style>
+
 :root{
   --bg1:#0b1220; --bg2:#0e1730;
   --card:#121b31; --card2:#0f172a;
@@ -111,583 +112,731 @@ video{width:100%;height:56vh;max-height:520px;object-fit:cover;display:block}
   display:flex;align-items:flex-end;padding:18px;font-weight:900
 }
 .success{font-size:28px;font-weight:1000;margin-top:14px}
+
+
+/* --- Compatibility styles for multi-item screens (v5) --- */
+.stepPill{
+  display:inline-flex; align-items:center; gap:8px;
+  padding: 6px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+  font-size: 12px; color: rgba(255,255,255,.92);
+  font-weight: 900;
+}
+.stepNum{
+  width:18px; height:18px; border-radius:999px;
+  background: rgba(6,182,212,.18);
+  border: 1px solid rgba(6,182,212,.28);
+  display:flex; align-items:center; justify-content:center;
+  font-size: 11px;
+}
+/* Reuse index button styles but allow our "danger" */
+.btn.danger{background: rgba(239,68,68,.18); border:1px solid rgba(239,68,68,.28); box-shadow:none}
+/* Inputs in detail screens */
+.input{
+  width:100%;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  outline:none;
+}
+.input[readonly]{opacity:.92}
+/* Item rows */
+.item{
+  display:flex; gap:12px; align-items:flex-start; justify-content:space-between;
+  padding:12px;border-radius:18px;border:1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.03);
+}
+.thumb{
+  width:40px;height:40px;border-radius:14px;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  display:grid; place-items:center; font-weight:1000;
+}
+.meta{flex:1; display:flex; flex-direction:column; gap:4px}
+.meta .top{display:flex; justify-content:space-between; gap:12px; align-items:flex-start}
+.meta .name{font-weight:1000}
+.meta .sub{font-size:12px;color:var(--muted)}
+.actions{display:flex; flex-direction:column; gap:8px}
+.hidden{display:none !important}
+
+/* Ensure our screens align with index layout */
+.container{padding:16px 16px 24px;max-width:520px;margin:0 auto;width:100%}
+
+/* --- Policy chip style (screenshot match) --- */
+#policy .chip{
+  padding: 14px 18px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.10);
+  font-size: 18px;
+  font-weight: 900;
+}
+#policy .chip .dot{display:none !important}
+
+
+/* Policy screen sizing adjustments */
+#policy div[style*="font-size:44px"]{font-size:34px !important}
+#policy div[style*="font-size:30px"]{font-size:22px !important}
+#policy .chip{font-size:14px !important; padding:10px 14px !important}
+#policy .small{font-size:12px}
+#policy .accent{color:#22d3ee; font-weight:1000}
+
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <div class="brand"><div class="mark"></div><span>ATTEST</span></div>
+    <div class="brand">
+      <div class="mark"></div>
+      <span>ATTEST</span>
+      <span class="small" style="margin-left:10px">A real-time authorization and intent network for payments</span>
+    </div>
   </header>
 
   <div class="container">
+    
+<section id="home" class="screen active">
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="h1">Hi, <span id="userName">Jamie</span> 👋</div>
+        <div class="small">Work Card • **** <span id="cardLast4">1842</span></div>
+        <div class="small">Spend rules: <span id="policyName"> Field Ops - Standard</span></div>
+      </div>
+      <div class="pill"><span class="dot"></span>Status: <span id="pillStatusText">Ready</span></div>
+    </div>
+    <hr/>
+    <div class="grid2">
+      <div class="kv">
+        <b>Today’s spend</b><span>$<span id="todaySpend">82.40</span></span>
+      </div>
+      <div class="kv">
+        <b>Daily limit</b><span>$<span id="dailyLimit">250.00</span></span>
+      </div>
+      <div class="kv">
+        <b>Auto-approve</b><span>Hardware, fuel, safety, parking</span>
+      </div>
+      <div class="kv">
+        <b>May need approval</b><span>Electronics, large purchases</span>
+      </div>
+    </div>
+    <hr/>
+    <button class="btn" id="btnStart">New Purchase</button>
+    <div class="grid2" style="margin-top:10px">
+      <button class="btn ghost" id="btnPolicy">View Policy</button>
+      <button class="btn secondary" id="btnRefresh">Refresh</button>
+    </div>
+  </div>
 
-    <!-- DASHBOARD -->
-    <section id="dash" class="screen active">
-      <div class="card">
-        <div class="row">
-          <div>
-            <div class="h1">Hi, Jordan 👋</div>
-            <div class="small">Field Tech • North Region • Work Card • **** 1842</div>
-          </div>
-          <div class="pill"><span class="dot"></span>Policy: <span id="policyName">Field Ops — Standard</span></div>
-        </div>
-        <hr/>
-        <div class="grid2">
-          <div class="kv">
-            <b>Today’s spend</b><span id="todaysSpend">$82.40</span>
-          </div>
-          <div class="kv">
-            <b>Available today</b><span id="avail">$250.00</span>
-          </div>
-          <div class="kv">
-            <b>Auto-approve</b><span>Hardware, fuel, supplies</span>
-          </div>
-          <div class="kv">
-            <b>Needs approval</b><span>Electronics, tools > $200</span>
-          </div>
-        </div>
-        <hr/>
-        <button class="btn" id="newPurchaseBtn">New Purchase</button>
-        <div class="grid2" style="margin-top:10px">
-          <button class="btn ghost" id="viewPolicyBtn">View Policy</button>
-          <button class="btn secondary" id="refreshBtn">Refresh</button>
+  <div style="height:14px"></div>
+
+  <div class="card">
+    <div class="row">
+      <div class="h2">Recent transactions</div>
+      <div class="small" id="txCount">—</div>
+    </div>
+    <div style="height:10px"></div>
+    <div id="recentList" class="list"></div>
+  </div>
+
+  <div class="small" style="margin-top:10px">Demo tip: Tap <b>New Purchase</b>, then take a photo to auto-fill details.</div>
+</section>
+
+    
+<section class="screen" id="policy">
+  <div class="card" style="padding:18px 16px 16px">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px">
+      <div>
+        <div style="font-size:44px; font-weight:1000; letter-spacing:-0.02em; line-height:1">Policy</div>
+        <div style="margin-top:6px; font-size:16px; color:var(--muted)">
+          <span id="policyTitle">Field Ops — Standard</span> <span style="opacity:.9">(Auto-approve rules)</span>
         </div>
       </div>
+      <button class="btn ghost" id="btnBackFromPolicy" style="width:auto; padding:12px 18px; border-radius:18px; font-weight:1000">Back</button>
+    </div>
+    <div style="height:14px"></div>
+    <div style="height:1px; background: rgba(255,255,255,.08);"></div>
 
-      <div style="height:14px"></div>
+    <div style="height:18px"></div>
+    <div style="font-size:30px; font-weight:1000; letter-spacing:-0.02em">Auto-approved</div>
+    <div id="autoCats" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:14px"></div>
 
+    <div style="height:26px"></div>
+    <div style="font-size:30px; font-weight:1000; letter-spacing:-0.02em">Requires manager approval</div>
+    <div id="needsCats" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:14px"></div>
+
+    <div style="height:26px"></div>
+    <div style="font-size:30px; font-weight:1000; letter-spacing:-0.02em">Hard blocks</div>
+    <div id="blockedCats" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:14px"></div>
+
+    <div style="height:18px"></div>
+    <div style="height:1px; background: rgba(255,255,255,.08);"></div>
+    <div style="margin-top:14px; font-size:14px; color:var(--muted); line-height:1.35">
+      In production, these rules live in a centralized policy engine (OPA/Rego-style) with audit-ready evidence.
+    </div>
+  </div>
+</section>
+
+    <section class="screen" id="capture">
       <div class="card">
-        <div class="row">
-          <div class="h2">Recent transactions</div>
-          <div class="small" id="txCount">0</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+          <div>
+            <div class="label">Step 1 — Capture</div>
+            <div class="value">Take a photo of the item</div>
+          </div>
+          <div class="stepPill" id="itemPill"><span class="stepNum" id="itemNum">1</span> Item <span id="itemCountText">1</span></div>
         </div>
+
         <div style="height:10px"></div>
-        <div id="txList" class="list"></div>
-      </div>
-    </section>
+        <label class="label">Photo</label>
+        <input class="input" id="fileInput" type="file" accept="image/*" capture="environment"/>
+        <div id="previewWrap" style="margin-top:10px; display:none">
+          <img id="previewImg" alt="Evidence preview" style="width:100%; border-radius:16px; border:1px solid rgba(255,255,255,.14)"/>
+        </div>
 
-    <!-- POLICY VIEW -->
-    <section id="policy" class="screen">
+        <hr class="sep"/>
+        <label class="label" for="merchantInput">Merchant (auto-filled)</label>
+        <input class="input" id="merchantInput" readonly />
+
+        <div style="height:10px"></div>
+        <label class="label" for="catInput">Category (auto-filled)</label>
+        <input class="input" id="catInput" readonly />
+
+        <div style="height:10px"></div>
+        <label class="label" for="amountInput">Approximate amount (you enter)</label>
+        <input class="input" id="amountInput" inputmode="decimal" placeholder="e.g., 39.99" />
+
+        <hr class="sep"/>
+        <div class="grid2">
+          <button class="btn secondary" id="btnAddItem">Add item</button>
+          <button class="btn" id="btnFinishPay">Finish and Pay</button>
+        </div>
+      </div>
+      <button class="btn secondary" id="btnCancelPurchase">Cancel</button>
+      <div class="footerNote">We auto-detect merchant + category in the demo when you attach a photo.</div>
+    </section>
+    <section class="screen" id="cart">
       <div class="card">
+        <div class="row" style="align-items:center; justify-content:space-between">
+          <div>
+            <div class="label">Step 2 — Review</div>
+            <div class="value">Your items</div>
+          </div>
+          <div class="badge" id="approvalBadge">Auto-approved</div>
+        </div>
+        <hr class="sep"/>
+        <div class="list" id="cartList"></div>
+        <hr class="sep"/>
         <div class="row">
           <div>
-            <div class="h1">Policy</div>
-            <div class="small" id="policySubtitle">Field Ops — Standard (Auto-approve rules)</div>
+            <div class="label">Merchant</div>
+            <div class="value" id="cartMerchant">—</div>
           </div>
-          <button class="btn secondary" style="width:auto;padding:10px 12px;border-radius:14px" id="backDash1">Back</button>
+          <div>
+            <div class="label">Total</div>
+            <div class="value">$<span id="cartTotal">0.00</span></div>
+          </div>
         </div>
-        <hr/>
-        <div class="h2">Auto-approved</div>
-        <div class="chips">
-          <div class="chip">Hardware</div>
-          <div class="chip">Fuel</div>
-          <div class="chip">Safety supplies</div>
-          <div class="chip">Parking/Tolls</div>
-        </div>
-        <div style="height:14px"></div>
-        <div class="h2">Requires manager approval</div>
-        <div class="chips">
-          <div class="chip">Electronics</div>
-          <div class="chip">Tools <strong>&gt; $200</strong></div>
-          <div class="chip">New vendors</div>
-        </div>
-        <div style="height:14px"></div>
-        <div class="h2">Hard blocks</div>
-        <div class="chips">
-          <div class="chip">Gift cards</div>
-          <div class="chip">Alcohol</div>
-          <div class="chip">Cash equivalents</div>
-        </div>
-        <hr/>
-        <div class="small">In production, these rules live in a centralized policy engine (OPA/Rego-style) with audit-ready evidence.</div>
       </div>
+
+      <div class="grid2">
+        <button class="btn secondary" id="btnAddMore">Add another item</button>
+        <button class="btn" id="btnProceed">Proceed to pay</button>
+      </div>
+      <div style="height:10px"></div>
+      <button class="btn secondary" id="btnBackHome">Back to home</button>
     </section>
-
-    <!-- PURCHASE: CAMERA -->
-    <section id="purchase" class="screen">
-      <div class="camWrap">
-        <video id="cam" autoplay playsinline muted></video>
-        <div class="scanOverlay"></div>
-        <div class="scanBox"></div>
-        <div class="scanLine"></div>
-      </div>
-
-      <div class="sheet">
-        <div class="card">
-          <div class="row">
-            <div>
-              <div class="h1">What are you buying?</div>
-              <div class="small">Point at the item or receipt, then tap Capture</div>
-            </div>
-            <button class="btn secondary" style="width:auto;padding:10px 12px;border-radius:14px" id="cancelPurchase">Cancel</button>
-          </div>
-
-          <div class="grid2" style="margin-top:12px">
-            <button class="btn green" id="captureBtn">Capture</button>
-            <label class="btn ghost" style="display:flex;align-items:center;justify-content:center;cursor:pointer">
-              Upload
-              <input id="fileInput" type="file" accept="image/*" capture="environment" style="display:none"/>
-            </label>
-          </div>
-
-          <div class="small" style="margin-top:10px">
-            Tip: On GitHub Pages, camera requires HTTPS and user permission. Upload works everywhere.
-          </div>
-        </div>
-      </div>
-      <canvas id="canvas" class="hidden"></canvas>
-    </section>
-
-    <!-- REVIEW / DETECTION -->
-    <section id="review" class="screen">
+    <section class="screen" id="pay">
       <div class="card">
+        <div class="label">Step 3 — Tap to pay</div>
+        <div class="value">Ready when approved</div>
+        <hr class="sep"/>
         <div class="row">
           <div>
-            <div class="h1">We found this</div>
-            <div class="small">Real capture + (optional) barcode detection</div>
+            <div class="label">Merchant</div>
+            <div class="value" id="payMerchant">—</div>
           </div>
-          <button class="btn secondary" style="width:auto;padding:10px 12px;border-radius:14px" id="backToCam">Back</button>
+          <div>
+            <div class="label">Total</div>
+            <div class="value">$<span id="payTotal">0.00</span></div>
+          </div>
         </div>
         <div style="height:12px"></div>
-        <div class="preview"><img id="shot" alt="Captured image"/></div>
-
-        <div style="height:12px"></div>
-        <div class="chips" id="detectedChips"></div>
-
-        <hr/>
-        <div class="grid2">
-          <button class="btn secondary" id="editBtn">Edit details</button>
-          <button class="btn green" id="continueBtn">Continue</button>
+        <div class="card" style="margin:0; background: rgba(255,255,255,.05)">
+          <div class="row" style="align-items:center; justify-content:space-between">
+            <div class="chip"><span class="dot" id="permitDot"></span> <span id="permitText">Permit active (10 min)</span></div>
+            <div class="pill" id="timerPill">10:00</div>
+          </div>
+          <div style="margin-top:10px; font-size:12px; color: var(--muted)">
+            Demo: we simulate the real-time authorization decision during the tap.
+          </div>
         </div>
+        <div style="height:12px"></div>
+        <button class="btn" id="btnSimTap">Simulate tap</button>
+        <div style="height:10px"></div>
+        <button class="btn secondary" id="btnFinish">Finish</button>
       </div>
     </section>
-
-    <!-- DETAILS (quick edit) -->
-    <section id="details" class="screen">
+    <section class="screen" id="result">
       <div class="card">
+        <div class="label">Result</div>
+        <div class="value" id="resultTitle">Approved</div>
+        <div style="margin-top:8px; color: var(--muted)" id="resultDetail">—</div>
+        <hr class="sep"/>
         <div class="row">
           <div>
-            <div class="h1">Purchase details</div>
-            <div class="small">Fast, friendly confirmation — not a form.</div>
+            <div class="label">Authorization</div>
+            <div class="value" id="authId">AUTH-—</div>
           </div>
-          <button class="btn secondary" style="width:auto;padding:10px 12px;border-radius:14px" id="backReview">Back</button>
-        </div>
-        <hr/>
-        <div class="kv"><b>Merchant</b><span id="mMerchant">Home Depot</span></div>
-        <div style="height:10px"></div>
-        <div class="kv"><b>Category</b><span id="mCategory">Hardware</span></div>
-        <div style="height:10px"></div>
-        <div class="kv"><b>Amount</b><span id="mAmount">$42.50</span></div>
-
-        <div style="height:14px"></div>
-        <div class="h2">Quick changes</div>
-        <div class="chips">
-          <div class="chip" data-merchant="Home Depot" data-category="Hardware" data-amount="42.50">Home Depot • Hardware</div>
-          <div class="chip" data-merchant="Shell" data-category="Fuel" data-amount="36.20">Shell • Fuel</div>
-          <div class="chip" data-merchant="Lowe’s" data-category="Hardware" data-amount="58.10">Lowe’s • Hardware</div>
-          <div class="chip" data-merchant="Best Buy" data-category="Electronics" data-amount="219.00">Best Buy • Electronics</div>
-        </div>
-
-        <hr/>
-        <button class="btn green" id="checkPolicyBtn">Check policy</button>
-      </div>
-    </section>
-
-    <!-- POLICY CHECK RESULT -->
-    <section id="decision" class="screen">
-      <div class="card center">
-        <div>
-          <div class="h1" id="decisionTitle">Checking policy…</div>
-          <div class="small" id="decisionSub">One moment</div>
-          <div style="height:14px"></div>
-          <div class="pill" id="decisionPill"><span class="dot"></span><span id="decisionPillText">Analyzing</span></div>
-          <div style="height:18px"></div>
-          <button class="btn green hidden" id="activateBtn">Activate work card</button>
-          <button class="btn secondary hidden" id="needApprovalBtn">Request manager approval</button>
-          <button class="btn secondary hidden" id="blockedBtn">Back to details</button>
+          <div>
+            <div class="label">Status</div>
+            <div class="value" id="statusText">—</div>
+          </div>
         </div>
       </div>
-    </section>
-
-    <!-- ACTIVE CARD -->
-    <section id="active" class="screen">
-      <div class="card center">
-        <div>
-          <div class="h1">Your work card is ready</div>
-          <div class="small">Tap your phone to pay</div>
-          <div style="height:12px"></div>
-          <div class="timer" id="timer">10:00</div>
-          <button class="btn" id="tapPayBtn">Tap to Pay</button>
-          <button class="btn ghost" id="cancelWindowBtn">Cancel</button>
-        </div>
+      <div class="grid2">
+        <button class="btn" id="btnNewPurchase">New purchase</button>
+        <button class="btn secondary" id="btnBackToHome2">Back to home</button>
       </div>
-    </section>
-
-    <!-- DONE -->
-    <section id="done" class="screen">
-      <div class="card center">
-        <div>
-          <div class="h1">All set 👍</div>
-          <div class="small">Transaction logged • Receipt linked<br/>No expense report needed</div>
-          <div style="height:18px"></div>
-          <button class="btn green" id="backHomeBtn">Back to home</button>
+    
+      <div class="card" id="complianceCard" style="display:none; margin-top:12px">
+        <div class="label">Compliance captured</div>
+        <div class="value">This purchase met policy at time of payment</div>
+        <hr class="sep"/>
+        <div class="row">
+          <div>
+            <div class="label">Policy decision</div>
+            <div class="value" id="ccDecision">—</div>
+          </div>
+          <div>
+            <div class="label">Evidence</div>
+            <div class="value">Photo attached</div>
+          </div>
         </div>
+        <div style="height:8px"></div>
+        <div class="label">Items</div>
+        <div id="ccItems" style="font-size:12px; color:var(--muted)"></div>
+        <div style="height:8px"></div>
+        <div class="label">Permit / Hash</div>
+        <div class="value" id="ccHash">—</div>
       </div>
-    </section>
 
+</section>
   </div>
 </div>
 
-<div id="wallet" class="walletDim">
-  <div class="walletCard">ATTEST • Work Card</div>
-  <div class="success">Payment Authorized</div>
-  <div class="small">Receipt automatically recorded</div>
-</div>
-
 <script>
-/** ---------- Demo state ---------- **/
-const state = {
-  user: { name:"Jordan", role:"Field Tech", region:"North Region", last4:"1842" },
-  policy: {
-    name:"Field Ops — Standard",
-    autoApproved:["Hardware","Fuel","Safety supplies","Parking/Tolls"],
-    requiresApproval:["Electronics","Tools > $200","New vendors"],
-    blocked:["Gift cards","Alcohol","Cash equivalents"],
-    dailyLimit:250,
-    todaySpend:82.40
-  },
-  draft: { merchant:"Home Depot", category:"Hardware", amount:42.50, evidenceUrl:"" },
-  tx: [
-    { id:"T-1042", merchant:"7‑Eleven", category:"Fuel", amount:28.40, status:"approved", when:"Today 9:18 AM" },
-    { id:"T-1041", merchant:"Home Depot", category:"Hardware", amount:54.00, status:"approved", when:"Yesterday 3:02 PM" },
-    { id:"T-1040", merchant:"Best Buy", category:"Electronics", amount:219.00, status:"pending", when:"Yesterday 11:21 AM" },
-  ]
-};
 
-const $ = (id)=>document.getElementById(id);
-function money(x){ return "$" + Number(x).toFixed(2); }
-function setScreen(id){
-  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
-  $(id).classList.add("active");
-  window.scrollTo({top:0,behavior:"instant"});
-}
-function renderDashboard(){
-  $("policyName").textContent = state.policy.name;
-  $("policySubtitle").textContent = state.policy.name + " (Auto-approve rules)";
-  $("todaysSpend").textContent = money(state.policy.todaySpend);
-  $("avail").textContent = money(Math.max(0, state.policy.dailyLimit - state.policy.todaySpend));
-  $("txCount").textContent = state.tx.length + " items";
-
-  const list = $("txList");
-  list.innerHTML = "";
-  state.tx.slice(0,6).forEach(t=>{
-    const div = document.createElement("div");
-    div.className = "tx";
-    const left = document.createElement("div"); left.className="left";
-    left.innerHTML = `<div style="font-weight:900">${t.merchant} <span class="muted" style="font-weight:700">• ${t.category}</span></div>
-                      <div class="small">${t.when} • ${t.id}</div>`;
-    const right = document.createElement("div");
-    const badge = document.createElement("div");
-    badge.className = "badge " + t.status;
-    badge.innerHTML = `<span class="dot"></span>${t.status.charAt(0).toUpperCase()+t.status.slice(1)}`;
-    right.innerHTML = `<div style="font-weight:1000;text-align:right">${money(t.amount)}</div>`;
-    right.appendChild(badge);
-    div.appendChild(left); div.appendChild(right);
-    list.appendChild(div);
-  });
-}
-renderDashboard();
-
-/** ---------- Navigation ---------- **/
-$("newPurchaseBtn").onclick = ()=>{ setScreen("purchase"); startCamera(); };
-$("viewPolicyBtn").onclick = ()=> setScreen("policy");
-$("backDash1").onclick = ()=> setScreen("dash");
-$("refreshBtn").onclick = ()=> { // friendly demo randomization
-  const bump = (Math.random()*12).toFixed(2);
-  state.policy.todaySpend += Number(bump);
-  renderDashboard();
-  if(navigator.vibrate) navigator.vibrate(20);
-};
-
-/** ---------- Camera capture ---------- **/
-let stream;
-async function startCamera(){
-  const video = $("cam");
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}, audio:false});
-    video.srcObject = stream;
-  }catch(e){
-    console.log("Camera unavailable:", e);
-  }
-}
-
-function stopCamera(){
-  try{
-    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
-  }catch(e){}
-}
-
-function showReview(dataUrl){
-  state.draft.evidenceUrl = dataUrl;
-  $("shot").src = dataUrl;
-  buildDetectedChips(); 
-  setScreen("review");
-}
-
-$("captureBtn").onclick = ()=>{
-  const video = $("cam");
-  if(!video.videoWidth){
-    alert("Camera not available. Try Upload instead.");
-    return;
-  }
-  const canvas = $("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(video,0,0);
-  const dataUrl = canvas.toDataURL("image/jpeg",0.85);
-  showReview(dataUrl);
-  stopCamera();
-  if(navigator.vibrate) navigator.vibrate([30,50,30]);
-};
-
-$("cancelPurchase").onclick = ()=>{
-  stopCamera();
-  setScreen("dash");
-};
-
-$("fileInput").addEventListener("change",(e)=>{
-  const file = e.target.files?.[0];
-  if(!file) return;
-  const url = URL.createObjectURL(file);
-  // Load into img then to dataurl for consistent preview
-  const img = new Image();
-  img.onload = ()=>{
-    const canvas = $("canvas");
-    canvas.width = img.width; canvas.height = img.height;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img,0,0);
-    const dataUrl = canvas.toDataURL("image/jpeg",0.88);
-    showReview(dataUrl);
-    URL.revokeObjectURL(url);
-    if(navigator.vibrate) navigator.vibrate(40);
+(function(){
+  var state = {
+    cart: [],
+    permitExpiresAt: 0,
+    permitActive: false,
+    user: { name:"Jamie", last4:"1842" },
+    policy: {
+      name:"Field Ops - Standard",
+      autoApproved:["Hardware","Fuel","Safety supplies","Parking/Tolls"],
+      requiresApproval:["Electronics","Tools > $200","New vendors"],
+      blocked:["Gift cards","Alcohol","Cash equivalents"],
+      dailyLimit:250,
+      todaySpend:82.40
+    },
+    recent: [
+      { merchant:"Shell", amount:18.22, status:"Approved", badge:"ok" },
+      { merchant:"Home Depot", amount:46.13, status:"Approved", badge:"ok" },
+      { merchant:"Tool Town", amount:229.99, status:"Needs approval", badge:"warn" }
+    ],
+    autoFill: {
+      merchants:["Home Depot","Shell","Ace Hardware","7‑Eleven","Safety Supply Co.","City Parking","Tool Town","New Vendor Mart"],
+      categories:["Hardware","Fuel","Safety supplies","Parking/Tolls","Electronics","Tools","New vendors","Gift cards","Alcohol","Cash equivalents"]
+    }
   };
-  img.src = url;
-});
 
-$("backToCam").onclick = ()=>{ setScreen("purchase"); startCamera(); };
-$("editBtn").onclick = ()=>{ setScreen("details"); syncDetails(); };
-$("continueBtn").onclick = ()=>{ setScreen("details"); syncDetails(); };
-$("backReview").onclick = ()=> setScreen("review");
-
-function syncDetails(){
-  $("mMerchant").textContent = state.draft.merchant;
-  $("mCategory").textContent = state.draft.category;
-  $("mAmount").textContent = money(state.draft.amount);
-}
-
-/** ---------- “Real” detection (BarcodeDetector if supported) ---------- **/
-async function detectBarcode(){
-  if(!("BarcodeDetector" in window)) return null;
-  try{
-    const detector = new BarcodeDetector({formats:["qr_code","code_128","ean_13","ean_8","upc_a","upc_e","pdf417"]});
-    const img = $("shot");
-    // draw into canvas
-    const canvas = $("canvas");
-    const ctx = canvas.getContext("2d");
-    canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-    ctx.drawImage(img,0,0);
-    const bitmap = await createImageBitmap(canvas);
-    const codes = await detector.detect(bitmap);
-    if(codes && codes.length){
-      return codes[0].rawValue || "barcode detected";
-    }
-  }catch(e){
-    console.log("Barcode detect failed", e);
+  function $(id){ return document.getElementById(id); }
+  function setPill(text){ var p = $("pillStatus"); if(p) p.textContent = text; var pt = $("pillStatusText"); if(pt) pt.textContent = text; }
+  function show(screenId){
+    document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+    var el = $(screenId); if(el) el.classList.add("active");
+    window.scrollTo({top:0, left:0, behavior:"auto"});
   }
-  return null;
+  function fmtMoney(n){ return (Math.round(n*100)/100).toFixed(2); }
+  
+function makeChip(text, kind){
+    var span = document.createElement("span");
+    span.className = "chip";
+    var dot = document.createElement("span");
+    dot.className = "dot" + (kind ? (" " + kind) : "");
+    span.appendChild(dot);
+    // color the > $200 part
+    var safe = (text||"").replace(/>\s*\$?200/g, '<span class="accent">&gt; $200</span>');
+    var label = document.createElement("span");
+    label.innerHTML = " " + safe;
+    span.appendChild(label);
+    return span;
 }
+  function renderPolicy(){
+    $("policyTitle").textContent = state.policy.name;
+    $("autoCats").innerHTML = "";
+    state.policy.autoApproved.forEach(function(t){ $("autoCats").appendChild(makeChip(t)); });
+    $("needsCats").innerHTML = "";
+    state.policy.requiresApproval.forEach(function(t){ $("needsCats").appendChild(makeChip(t, "amber")); });
+    $("blockedCats").innerHTML = "";
+    state.policy.blocked.forEach(function(t){ $("blockedCats").appendChild(makeChip(t, "red")); });
+  }
+  function renderRecent(){
+    var tc = $("txCount"); if(tc) tc.textContent = state.recent.length + " items";
+    var host = $("recentList"); host.innerHTML = "";
+    state.recent.slice(0,4).forEach(function(tx){
+      var row = document.createElement("div"); row.className = "item";
+      var th = document.createElement("div"); th.className = "thumb"; th.textContent = tx.merchant.substring(0,1).toUpperCase();
+      var meta = document.createElement("div"); meta.className = "meta";
+      var top = document.createElement("div"); top.className = "top";
+      var name = document.createElement("div"); name.className = "name"; name.textContent = tx.merchant;
+      var amt = document.createElement("div"); amt.className = "name"; amt.textContent = "$" + fmtMoney(tx.amount);
+      top.appendChild(name); top.appendChild(amt);
+      var sub = document.createElement("div"); sub.className = "sub"; sub.textContent = tx.status;
+      meta.appendChild(top); meta.appendChild(sub);
+      var chip = document.createElement("div"); chip.className = "chip";
+      var dot = document.createElement("span"); dot.className = "dot" + (tx.badge==="warn" ? " amber" : (tx.badge==="red" ? " red" : ""));
+      chip.appendChild(dot); chip.appendChild(document.createTextNode(" " + tx.status));
+      row.appendChild(th); row.appendChild(meta); row.appendChild(chip);
+      host.appendChild(row);
+    });
+  }
+  function normalizeMerchant(s){ return (s||"").trim() || "Unknown Merchant"; }
+  function normalizeCategory(s){ return (s||"").trim() || "Uncategorized"; }
+  function parseAmount(s){
+    var n = parseFloat((s||"").replace(/[^0-9.]/g,""));
+    return isFinite(n) ? n : 0;
+  }
+  
+  function canonicalCategory(cat){
+    var c = (cat||"").toLowerCase().trim();
+    if(c.includes("parking") || c.includes("toll")) return "parking/tolls";
+    if(c.includes("fuel") || c.includes("gas")) return "fuel";
+    if(c.includes("hardware")) return "hardware";
+    if(c.includes("safety")) return "safety supplies";
+    if(c.includes("electronics")) return "electronics";
+    if(c.includes("tool")) return "tools";
+    if(c.includes("new vendor")) return "new vendors";
+    if(c.includes("gift")) return "gift cards";
+    if(c.includes("alcohol")) return "alcohol";
+    if(c.includes("cash")) return "cash equivalents";
+    return c;
+  }
 
-function buildDetectedChips(){
-  const chips = $("detectedChips");
-  chips.innerHTML = "";
+function itemStatus(item){
+    var cat = canonicalCategory(item.category);
+    var amt = (item.amount||0);
 
-  // Always show evidence is captured (real)
-  chips.appendChild(chipEl("📷 Evidence captured", "Photo stored for audit"));
+    // Hard blocks
+    if(cat === "gift cards" || cat === "alcohol" || cat === "cash equivalents") return "Blocked";
 
-  // "Soft" merchant/category guess (demo)
-  chips.appendChild(chipEl("🏬 Merchant guess", state.draft.merchant));
-  chips.appendChild(chipEl("🏷️ Category guess", state.draft.category));
-  chips.appendChild(chipEl("💵 Amount guess", money(state.draft.amount)));
+    // Requires approval
+    if(cat === "electronics") return "Needs approval";
+    if(cat === "new vendors") return "Needs approval";
+    if(cat === "tools"){
+      if(amt > 200) return "Needs approval";
+      return "Approved";
+    }
 
-  // Try barcode detection and add if found
-  detectBarcode().then(val=>{
-    if(val){
-      chips.appendChild(chipEl("🔎 Barcode found", val.slice(0,28) + (val.length>28?"…":"")));
-      // fun: if QR contains "bestbuy" adjust guess
-      const lower = val.toLowerCase();
-      if(lower.includes("bestbuy")){
-        state.draft.merchant="Best Buy"; state.draft.category="Electronics"; state.draft.amount=219.00;
-      }
-      syncDetails();
+    // Auto-approved
+    var auto = state.policy.autoApproved.map(function(x){ return x.toLowerCase(); });
+    if(auto.indexOf(cat) >= 0){
+      if(amt > 300) return "Needs approval";
+      return "Approved";
+    }
+
+    // Default conservative
+    return "Needs approval";
+  }
+
+    // Auto-approved categories
+    var auto = state.policy.autoApproved.map(function(x){ return x.toLowerCase(); });
+    if(auto.indexOf(cat) >= 0) return "Approved";
+
+    // Default to approval-needed for anything else in the demo
+    return "Needs approval";
+  }
+  function overallApproval(){
+    if(state.cart.length === 0) return { status:"—", badge:"warn" };
+    if(state.cart.some(function(i){ return itemStatus(i) === "Blocked"; })) return { status:"Blocked", badge:"block" };
+    if(state.cart.some(function(i){ return itemStatus(i) === "Needs approval"; })) return { status:"Needs approval", badge:"warn" };
+    return { status:"Auto-approved", badge:"ok" };
+  }
+  function renderCart(){
+    var list = $("cartList"); list.innerHTML = "";
+    if(state.cart.length === 0){
+      var empty = document.createElement("div");
+      empty.style.color = "var(--muted)";
+      empty.textContent = "No items yet. Add an item first.";
+      list.appendChild(empty);
     } else {
-      chips.appendChild(chipEl("🔎 Barcode", "None detected (ok)"));
+      state.cart.forEach(function(item, idx){
+        var row = document.createElement("div"); row.className = "item";
+        var th = document.createElement("div"); th.className = "thumb"; th.textContent = String(idx+1);
+        var meta = document.createElement("div"); meta.className = "meta";
+        var top = document.createElement("div"); top.className = "top";
+        var name = document.createElement("div"); name.className = "name"; name.textContent = item.name || ("Item " + (idx+1));
+        var amt = document.createElement("div"); amt.className = "name"; amt.textContent = "$" + fmtMoney(item.amount);
+        top.appendChild(name); top.appendChild(amt);
+        var sub = document.createElement("div"); sub.className = "sub";
+        sub.textContent = item.merchant + " • " + item.category + " • " + itemStatus(item);
+        meta.appendChild(top); meta.appendChild(sub);
+
+        var actions = document.createElement("div"); actions.className = "actions";
+        var rm = document.createElement("button");
+        rm.className = "btn danger smallbtn"; rm.textContent = "Remove";
+        rm.addEventListener("click", function(){ state.cart.splice(idx,1); renderCart(); updateItemPill(); });
+        actions.appendChild(rm);
+
+        row.appendChild(th); row.appendChild(meta); row.appendChild(actions);
+        list.appendChild(row);
+      });
     }
-  });
-}
+    var total = state.cart.reduce(function(s,i){ return s + (i.amount||0); }, 0);
+    $("cartTotal").textContent = fmtMoney(total);
+    $("cartMerchant").textContent = state.cart[0] ? normalizeMerchant(state.cart[0].merchant) : "—";
 
-function chipEl(label, value){
-  const d = document.createElement("div");
-  d.className = "chip";
-  d.innerHTML = `<strong>${label}</strong><div style="height:6px"></div>${value}`;
-  d.style.borderRadius="18px";
-  d.style.padding="12px 12px";
-  d.style.maxWidth="100%";
-  d.style.flex="1 1 160px";
-  return d;
-}
-
-// Quick change chips
-document.querySelectorAll(".chip[data-merchant]").forEach(ch=>{
-  ch.addEventListener("click", ()=>{
-    state.draft.merchant = ch.dataset.merchant;
-    state.draft.category = ch.dataset.category;
-    state.draft.amount = Number(ch.dataset.amount);
-    syncDetails();
-    if(navigator.vibrate) navigator.vibrate(20);
-  });
-});
-
-/** ---------- Policy decision ---------- **/
-$("checkPolicyBtn").onclick = ()=>{
-  setScreen("decision");
-  runDecision();
-};
-
-function runDecision(){
-  // reset buttons
-  $("activateBtn").classList.add("hidden");
-  $("needApprovalBtn").classList.add("hidden");
-  $("blockedBtn").classList.add("hidden");
-  const pill = $("decisionPill");
-  pill.className = "pill";
-  $("decisionTitle").textContent = "Checking policy…";
-  $("decisionSub").textContent = "One moment";
-  $("decisionPillText").textContent = "Analyzing";
-
-  // simulate decision time
-  setTimeout(()=>{
-    const cat = state.draft.category;
-    const amt = state.draft.amount;
-
-    const blocked = state.policy.blocked.map(x=>x.toLowerCase());
-    if(blocked.includes(cat.toLowerCase())){
-      pill.classList.add("bad");
-      $("decisionTitle").textContent = "Blocked";
-      $("decisionSub").textContent = "This category is not allowed.";
-      $("decisionPillText").textContent = "Denied";
-      $("blockedBtn").classList.remove("hidden");
-      return;
-    }
-
-    // requires approval if in list or high dollar tool/electronics
-    const req = state.policy.requiresApproval.map(x=>x.toLowerCase());
-    const needsApproval = req.some(r=>cat.toLowerCase().includes(r.split(" ")[0])) || (cat==="Electronics") || (cat==="Tools" && amt>200) || (amt>200 && cat==="Hardware" && state.draft.merchant==="Best Buy");
-    if(needsApproval){
-      pill.classList.add("warn");
-      $("decisionTitle").textContent = "Needs approval";
-      $("decisionSub").textContent = "We’ll route to your manager (demo).";
-      $("decisionPillText").textContent = "Pending";
-      $("needApprovalBtn").classList.remove("hidden");
-      return;
-    }
-
-    pill.classList.add("good");
-    $("decisionTitle").textContent = "Looks good — covered";
-    $("decisionSub").textContent = "Auto-approved under your policy.";
-    $("decisionPillText").textContent = "Approved";
-    $("activateBtn").classList.remove("hidden");
-    if(navigator.vibrate) navigator.vibrate(30);
-  }, 900);
-}
-
-$("blockedBtn").onclick = ()=> setScreen("details");
-
-$("needApprovalBtn").onclick = ()=>{
-  // Add a pending transaction and return home
-  addTransaction("pending");
-  setScreen("done");
-  $("backHomeBtn").textContent = "Back to home";
-};
-
-$("activateBtn").onclick = ()=>{
-  setScreen("active");
-  startTimer();
-};
-
-/** ---------- Active payment window ---------- **/
-let remaining=600, timerInt=null;
-function startTimer(){
-  remaining=600;
-  $("timer").textContent="10:00";
-  if(timerInt) clearInterval(timerInt);
-  timerInt=setInterval(()=>{
-    remaining--;
-    const m=Math.floor(remaining/60);
-    const s=String(remaining%60).padStart(2,"0");
-    $("timer").textContent = `${m}:${s}`;
-    if(remaining<=0){
-      clearInterval(timerInt);
-      timerInt=null;
-      // window expired
-      setScreen("dash");
-      renderDashboard();
-    }
-  },1000);
-}
-$("cancelWindowBtn").onclick = ()=>{
-  if(timerInt) clearInterval(timerInt);
-  timerInt=null;
-  setScreen("dash");
-  renderDashboard();
-};
-
-$("tapPayBtn").onclick = ()=>{
-  $("wallet").style.display="flex";
-  if(navigator.vibrate) navigator.vibrate([35,55,35]);
-  setTimeout(()=>{
-    $("wallet").style.display="none";
-    if(timerInt) clearInterval(timerInt);
-    timerInt=null;
-    addTransaction("approved");
-    setScreen("done");
-  }, 2100);
-};
-
-/** ---------- Transactions ---------- **/
-function addTransaction(status){
-  const idNum = 1043 + Math.floor(Math.random()*50);
-  const now = new Date();
-  const when = "Just now";
-  state.tx.unshift({
-    id:"T-"+idNum,
-    merchant: state.draft.merchant,
-    category: state.draft.category,
-    amount: state.draft.amount,
-    status,
-    when
-  });
-  // update spend if approved
-  if(status==="approved"){
-    state.policy.todaySpend += state.draft.amount;
+    var appr = overallApproval();
+    var badge = $("approvalBadge");
+    badge.textContent = appr.status;
+    badge.className = "badge" + (appr.badge==="warn" ? " warn" : (appr.badge==="block" ? " block" : ""));
   }
-  renderDashboard();
-}
 
-$("backHomeBtn").onclick = ()=>{
-  setScreen("dash");
-  renderDashboard();
-};
+  function clearCaptureForm(){
+    $("amountInput").value = "";
+    $("fileInput").value = "";
+    $("previewWrap").style.display = "none";
+    $("previewImg").src = "";
+    // Keep auto-filled values until next photo, so the user sees them
+  }
+
+  function autoFillFromPhoto(){
+    var m = state.autoFill.merchants[Math.floor(Math.random()*state.autoFill.merchants.length)];
+    var c = state.autoFill.categories[Math.floor(Math.random()*state.autoFill.categories.length)];
+    $("merchantInput").value = m;
+    $("catInput").value = c;
+    setPill("Details auto-filled");
+    setTimeout(function(){ setPill("Capturing"); }, 900);
+  }
+
+  var timerInt = null;
+  function startPermit(minutes){
+    state.permitActive = true;
+    state.permitExpiresAt = Date.now() + minutes*60*1000;
+    $("permitDot").className = "dot";
+    if(timerInt) clearInterval(timerInt);
+    timerInt = setInterval(function(){
+      var ms = state.permitExpiresAt - Date.now();
+      if(ms <= 0){
+        state.permitActive = false;
+        clearInterval(timerInt);
+        $("timerPill").textContent = "Expired";
+        $("permitText").textContent = "Permit expired";
+        $("permitDot").className = "dot red";
+        setPill("Permit expired");
+      } else {
+        var s = Math.floor(ms/1000);
+        var m = Math.floor(s/60);
+        var r = s % 60;
+        $("timerPill").textContent = String(m).padStart(2,"0") + ":" + String(r).padStart(2,"0");
+      }
+    }, 250);
+  }
+
+  function proceedToPay(){
+    var total = state.cart.reduce(function(s,i){ return s + (i.amount||0); }, 0);
+    $("payTotal").textContent = fmtMoney(total);
+    $("payMerchant").textContent = state.cart[0] ? normalizeMerchant(state.cart[0].merchant) : "—";
+    $("permitText").textContent = "Permit active (10 min)";
+    $("timerPill").textContent = "10:00";
+    setPill("Permit active");
+    startPermit(10);
+    show("pay");
+  }
+
+  function simulateTap(){
+    var appr = overallApproval();
+    var total = state.cart.reduce(function(s,i){ return s + (i.amount||0); }, 0);
+    var auth = "AUTH-" + Math.random().toString(16).slice(2,8).toUpperCase();
+
+    if(!state.permitActive){
+      $("resultTitle").textContent = "Declined";
+      $("resultDetail").textContent = "Permit expired — authorization denied.";
+      $("statusText").textContent = "Declined";
+    } else if(appr.status === "Blocked"){
+      $("resultTitle").textContent = "Declined";
+      $("resultDetail").textContent = "Not allowed by your spend rules.";
+      $("statusText").textContent = "Declined";
+    } else if(appr.status === "Needs approval"){
+      $("resultTitle").textContent = "Pending";
+      $("resultDetail").textContent = "Approval needed. In production this routes instantly.";
+      $("statusText").textContent = "Pending";
+    } else {
+      $("resultTitle").textContent = "Approved";
+      $("resultDetail").textContent = "Approved in real time. Receipt evidence attached.";
+      $("statusText").textContent = "Approved";
+      state.policy.todaySpend = state.policy.todaySpend + total;
+      $("todaySpend").textContent = fmtMoney(state.policy.todaySpend);
+      state.recent.unshift({ merchant: normalizeMerchant(state.cart[0].merchant), amount: total, status:"Approved", badge:"ok" });
+      renderRecent();
+    }
+    $("authId").textContent = auth;
+    state.permitActive = false;
+    if(timerInt) clearInterval(timerInt);
+    setPill("Complete");
+    
+    var card = $("complianceCard");
+    if(card){
+      if($("statusText").textContent === "Approved"){
+        var itemsTxt = state.cart.map(function(i,idx){
+          return (idx+1)+". "+(i.name||"Item")+" — "+i.category+" — $"+fmtMoney(i.amount);
+        }).join("<br/>");
+        $("ccItems").innerHTML = itemsTxt;
+        $("ccDecision").textContent = "Auto-approved by policy";
+        $("ccHash").textContent = auth + "-EVID";
+        card.style.display = "block";
+      } else {
+        card.style.display = "none";
+      }
+    }
+    
+    show("result");
+  }
+
+  function updateItemPill(){
+    var next = state.cart.length + 1;
+    $("itemNum").textContent = String(next);
+    $("itemCountText").textContent = String(next);
+  }
+
+  function startPurchase(){
+    state.cart = [];
+    $("merchantInput").value = "";
+    $("catInput").value = "";
+    clearCaptureForm();
+    updateItemPill();
+    setPill("Capturing");
+    show("capture");
+  }
+
+  function addCurrentItemToCart(){
+    var merchant = normalizeMerchant($("merchantInput").value);
+    var category = normalizeCategory($("catInput").value);
+    var amount = parseAmount($("amountInput").value);
+    if(amount <= 0){
+      alert("Enter an approximate amount to add this item.");
+      return false;
+    }
+    // enforce one-merchant-per-checkout for realism
+    if(state.cart.length > 0){
+      var existing = normalizeMerchant(state.cart[0].merchant);
+      if(existing.toLowerCase() !== merchant.toLowerCase()){
+        alert("This demo keeps one checkout to one merchant. Start a new purchase for a different merchant.");
+        return false;
+      }
+    }
+    var idx = state.cart.length + 1;
+    state.cart.push({
+      merchant: merchant,
+      category: category,
+      amount: amount,
+      name: "Item " + idx
+    });
+    clearCaptureForm();
+    updateItemPill();
+    setPill("Item " + idx + " added");
+    setTimeout(function(){ setPill("Capturing"); }, 900);
+    return true;
+  }
+
+  function init(){
+    $("userName").textContent = state.user.name;
+    $("policyName").textContent = state.policy.name;
+    $("cardLast4").textContent = state.user.last4;
+    $("todaySpend").textContent = fmtMoney(state.policy.todaySpend);
+    $("dailyLimit").textContent = fmtMoney(state.policy.dailyLimit);
+
+    renderRecent();
+    renderPolicy();
+
+    var br = $("btnRefresh");
+    if(br){
+      br.addEventListener("click", function(){
+        var bump = (Math.random()*12).toFixed(2);
+        state.policy.todaySpend = state.policy.todaySpend + Number(bump);
+        $("todaySpend").textContent = fmtMoney(state.policy.todaySpend);
+        if(navigator.vibrate) navigator.vibrate(20);
+        setPill("Refreshed");
+        setTimeout(function(){ setPill("Ready"); }, 700);
+      });
+    }
+
+    $("btnStart").addEventListener("click", startPurchase);
+    $("btnPolicy").addEventListener("click", function(){ show("policy"); setPill("Spend rules"); });
+    $("btnBackFromPolicy").addEventListener("click", function(){ show("home"); setPill("Ready"); });
+
+    $("btnCancelPurchase").addEventListener("click", function(){ show("home"); setPill("Ready"); });
+
+    $("btnAddItem").addEventListener("click", function(){
+      if(!$("merchantInput").value){
+        alert("Take a photo first so we can auto-fill the details.");
+        return;
+      }
+      addCurrentItemToCart();
+    });
+
+    $("btnFinishPay").addEventListener("click", function(){
+      // If there is an amount entered, treat it as adding the current item before finishing.
+      if($("merchantInput").value && $("amountInput").value.trim()){
+        var ok = addCurrentItemToCart();
+        if(!ok) return;
+      }
+      if(state.cart.length === 0){
+        alert("Add at least one item first.");
+        return;
+      }
+      renderCart();
+      show("cart");
+      setPill("Reviewing");
+    });
+
+    $("btnAddMore").addEventListener("click", function(){ show("capture"); setPill("Capturing"); });
+
+    $("btnProceed").addEventListener("click", function(){
+      if(state.cart.length === 0){ alert("Add at least one item first."); return; }
+      proceedToPay();
+    });
+
+    $("btnBackHome").addEventListener("click", function(){ show("home"); setPill("Ready"); });
+
+    $("btnSimTap").addEventListener("click", simulateTap);
+    $("btnFinish").addEventListener("click", function(){ show("home"); setPill("Ready"); });
+
+    $("btnNewPurchase").addEventListener("click", startPurchase);
+    $("btnBackToHome2").addEventListener("click", function(){ show("home"); setPill("Ready"); });
+
+    $("fileInput").addEventListener("change", function(){
+      var f = this.files && this.files[0] ? this.files[0] : null;
+      if(!f){ $("previewWrap").style.display = "none"; return; }
+      var url = URL.createObjectURL(f);
+      $("previewImg").src = url;
+      $("previewWrap").style.display = "block";
+      // demo auto-fill
+      autoFillFromPhoto();
+    });
+
+    show("home");
+    setPill("Ready");
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+
 </script>
 </body>
 </html>
