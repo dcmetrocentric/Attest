@@ -994,5 +994,49 @@ function itemStatus(item){
   </div>
 </div>
 
+
+<script>
+(function(){
+  var AUTO_APPROVED = ["Parking","Toll","Fuel","Gas","Hardware","Maintenance","Office Supplies"];
+  function pick(){ return AUTO_APPROVED[Math.floor(Math.random()*AUTO_APPROVED.length)]; }
+
+  function setCategory(){
+    var val = pick();
+
+    // try common patterns: select[name=category], #category, #cat, input placeholder
+    var sel = document.querySelector('select[name="category"], #category, #cat');
+    if(sel){
+      try{
+        // if option exists select it, else set value
+        var found = false;
+        for(var i=0;i<sel.options?.length||0;i++){
+          if((sel.options[i].text||"").toLowerCase().includes(val.toLowerCase())){
+            sel.selectedIndex = i; found=true; break;
+          }
+        }
+        if(!found) sel.value = val;
+        sel.dispatchEvent(new Event('change',{bubbles:true}));
+      }catch(e){}
+    }
+
+    // also update any category display field
+    var disp = document.querySelector('#categoryDisplay, .categoryDisplay, #detCategory');
+    if(disp){ disp.textContent = val; }
+
+    // store in state if present
+    if(window.state){ window.state.category = val; }
+  }
+
+  // when New Purchase clicked
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('#btnNewPurchase, .btnNewPurchase');
+    if(t){ setTimeout(setCategory, 50); }
+  });
+
+  // also on first load
+  document.addEventListener('DOMContentLoaded', function(){ setCategory(); });
+})();
+</script>
+
 </body>
 </html>
