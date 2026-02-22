@@ -362,7 +362,7 @@ function money(x){ return "$" + Number(x).toFixed(2); }
 function setScreen(id){
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
   $(id).classList.add("active");
-  window.scrollTo({top:0,behavior:"instant"});
+  window.scrollTo({top:0,behavior:"auto"});
 }
 function renderDashboard(){
   $("policyName").textContent = state.policy.name;
@@ -469,7 +469,8 @@ $("fileInput").addEventListener("change",(e)=>{
 });
 
 $("backToCam").onclick = ()=>{ setScreen("purchase"); startCamera(); };
-$("editBtn").onclick = ()=>{ setScreen("details"); syncDetails(); };\n$("addItemBtn").onclick = ()=>{ addDraftToCart(); setScreen("purchase"); startCamera(); };
+$("editBtn").onclick = ()=>{ setScreen("details"); syncDetails(); };
+$("addItemBtn").onclick = ()=>{ addDraftToCart(); setScreen("purchase"); startCamera(); };
 $("continueBtn").onclick = ()=>{ addDraftToCart(); setScreen("details"); syncDetails(); };
 $("backReview").onclick = ()=> setScreen("review");
 
@@ -566,7 +567,9 @@ document.querySelectorAll(".chip[data-merchant]").forEach(ch=>{
 });
 
 /** ---------- Policy decision ---------- **/
-$("addMoreItemsBtn").onclick = ()=>{ setScreen("purchase"); startCamera(); };\n\n$("checkPolicyBtn").onclick = ()=>{
+$("addMoreItemsBtn").onclick = ()=>{ setScreen("purchase"); startCamera(); };
+
+$("checkPolicyBtn").onclick = ()=>{
   setScreen("decision");
   runDecision();
 };
