@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Chore Cash</title>
   <meta name="theme-color" content="#0f172a" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <style>
     :root {
       --bg: #f4f7fb;
@@ -340,12 +337,6 @@
       border: 1px solid var(--line);
     }
 
-    button:disabled {
-      opacity: 0.58;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
     .admin-grid {
       display: grid;
       gap: 16px;
@@ -522,9 +513,9 @@
         <p class="subhead">Pick a kid, choose a chore, tap complete, and watch the earnings stack up. When it is time to settle up, head to the admin area and pay out the balance.</p>
 
         <nav class="jump-grid" aria-label="Jump to each child">
-          <button class="jump-btn aidan" data-scroll-target="aidan-section" data-kid-card="aidan" onclick="window.scrollToSectionAction && window.scrollToSectionAction('aidan-section')"></button>
-          <button class="jump-btn nathan" data-scroll-target="nathan-section" data-kid-card="nathan" onclick="window.scrollToSectionAction && window.scrollToSectionAction('nathan-section')"></button>
-          <button class="jump-btn ellie" data-scroll-target="ellie-section" data-kid-card="ellie" onclick="window.scrollToSectionAction && window.scrollToSectionAction('ellie-section')"></button>
+          <button class="jump-btn aidan" data-scroll-target="aidan-section" data-kid-card="aidan"></button>
+          <button class="jump-btn nathan" data-scroll-target="nathan-section" data-kid-card="nathan"></button>
+          <button class="jump-btn ellie" data-scroll-target="ellie-section" data-kid-card="ellie"></button>
         </nav>
       </div>
     </header>
@@ -586,8 +577,20 @@
     </section>
   </main>
 
-  <script>
-    const STORAGE_KEY = 'chore-cash-final-v6';
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getDatabase, ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCbK78IaNq_Aws4g2WfZbN1U5n1UAIxprs",
+      authDomain: "chores-app-9924c.firebaseapp.com",
+      databaseURL: "https://chores-app-9924c-default-rtdb.firebaseio.com",
+      projectId: "chores-app-9924c",
+      storageBucket: "chores-app-9924c.firebasestorage.app",
+      messagingSenderId: "686910942510",
+      appId: "1:686910942510:web:0b58494507b91bd5e01ebf"
+    };
+
     const KIDS = [
       { id: 'aidan', name: 'Aidan', accent: 'aidan' },
       { id: 'nathan', name: 'Nathan', accent: 'nathan' },
@@ -615,16 +618,14 @@
         ellie: {
           balance: 0,
           chores: [
-            { id: makeId(), title: 'Feed the pet', amount: 1.50, completed: false },
-            { id: makeId(), title: 'Tidy the play area', amount: 2.50, completed: false },
-            { id: makeId(), title: 'Help fold towels', amount: 2.00, completed: false }
+            { id: makeId(), title: 'Feed the dog', amount: 2.00, completed: false },
+            { id: makeId(), title: 'Help fold towels', amount: 2.50, completed: false },
+            { id: makeId(), title: 'Straighten up the living room', amount: 3.00, completed: false }
           ]
         }
       },
       payouts: []
     };
-
-    let state = loadState();
 
     const kidSectionsEl = document.getElementById('kid-sections');
     const childSelectEl = document.getElementById('child-select');
@@ -634,17 +635,48 @@
     const payoutControlsEl = document.getElementById('payout-controls');
     const historyListEl = document.getElementById('history-list');
     const resetAllBtn = document.getElementById('reset-all-btn');
+    const footerNote = document.querySelector('.footer-note');
 
-    window.payOutKidAction = (kidId) => payoutKid(kidId);
-    window.toggleChoreAction = (kidId, choreId) => toggleChore(kidId, choreId);
-    window.deleteChoreAction = (kidId, choreId) => deleteChore(kidId, choreId);
-    window.scrollToSectionAction = (id) => scrollToSection(id);
+    let state = loadFreshDefaultState();
+    let isSyncing = true;
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    const db = getDatabase(app);
+    const rootRef = ref(db, 'choreCashFamily');
 
     render();
     wireEvents();
+    startRealtimeSync();
+
+    async function startRealtimeSync() {
+      try {
+        const snap = await get(rootRef);
+        if (!snap.exists()) {
+          await set(rootRef, loadFreshDefaultState());
+        }
+
+        onValue(rootRef, (snapshot) => {
+          const raw = snapshot.val();
+          state = raw ? hydrateState(raw) : loadFreshDefaultState();
+          isSyncing = false;
+          if (footerNote) footerNote.textContent = 'Shared family data is now syncing through Firebase for everyone.';
+          render();
+        }, (error) => {
+          console.error(error);
+          isSyncing = false;
+          if (footerNote) footerNote.textContent = 'Firebase sync error. Check your database URL and Firebase rules.';
+        });
+      } catch (error) {
+        console.error(error);
+        isSyncing = false;
+        if (footerNote) footerNote.textContent = 'Could not connect to Firebase. Check your database URL and publish again.';
+      }
+    }
 
     function wireEvents() {
-      addChoreBtn.addEventListener('click', () => {
+      document.addEventListener('click', handleAppClick);
+
+      addChoreBtn.addEventListener('click', async () => {
         const childId = childSelectEl.value;
         const title = choreTitleEl.value.trim();
         const amount = Number(choreAmountEl.value);
@@ -658,7 +690,8 @@
           return;
         }
 
-        state.kids[childId].chores.unshift({
+        const kidState = state.kids[childId];
+        kidState.chores.unshift({
           id: makeId(),
           title,
           amount: roundMoney(amount),
@@ -667,14 +700,14 @@
 
         choreTitleEl.value = '';
         choreAmountEl.value = '';
-        saveAndRender();
+        await syncState();
       });
 
-      resetAllBtn.addEventListener('click', () => {
+      resetAllBtn.addEventListener('click', async () => {
         const okay = confirm('Reset every chore and every balance back to zero?');
         if (!okay) return;
         state = loadFreshDefaultState();
-        saveAndRender();
+        await syncState(true);
       });
     }
 
@@ -747,7 +780,6 @@
 
         kidSectionsEl.appendChild(section);
       });
-
     }
 
     function choreCard(kid, chore) {
@@ -761,10 +793,10 @@
             <div class="task-meta">${chore.completed ? `${money(chore.amount)} added to the cumulative amount.` : 'Optional chore available now.'}</div>
           </div>
           <div class="task-actions">
-            <button class="task-btn" type="button" data-complete="true" data-kid="${kid.id}" data-chore-id="${chore.id}" onclick="window.toggleChoreAction && window.toggleChoreAction('${kid.id}', '${chore.id}')">
+            <button class="task-btn" type="button" data-complete="true" data-kid="${kid.id}" data-chore-id="${chore.id}" ${chore.completed ? 'disabled' : ''}>
               ${chore.completed ? 'Completed' : 'Mark complete'}
             </button>
-            <button class="small-btn" type="button" data-delete="true" data-kid="${kid.id}" data-chore-id="${chore.id}" onclick="window.deleteChoreAction && window.deleteChoreAction('${kid.id}', '${chore.id}')">Remove</button>
+            <button class="small-btn" type="button" data-delete="true" data-kid="${kid.id}" data-chore-id="${chore.id}">Remove</button>
           </div>
         </article>
       `;
@@ -782,17 +814,38 @@
             <strong style="font-size:16px;">${kid.name}</strong>
             <span class="history-amount" style="font-size:18px;">${money(amount)}</span>
           </div>
-          <button class="primary-btn" type="button" data-payout-kid="${kid.id}" onclick="window.payOutKidAction && window.payOutKidAction('${kid.id}')" ${amount <= 0 ? 'disabled' : ''}>${amount > 0 ? `Pay out ${money(amount)}` : 'Nothing to pay out'}</button>
+          <button class="primary-btn" type="button" data-payout-kid="${kid.id}" ${amount <= 0 || isSyncing ? 'disabled' : ''}>${amount > 0 ? `Pay out ${money(amount)}` : 'Nothing to pay out'}</button>
         `;
         payoutControlsEl.appendChild(wrap);
       });
-
     }
 
+    async function handleAppClick(event) {
+      const payoutButton = event.target.closest('[data-payout-kid]');
+      if (payoutButton) {
+        if (payoutButton.disabled) return;
+        await payoutKid(payoutButton.getAttribute('data-payout-kid'));
+        return;
+      }
 
-    function scrollToSection(id) {
-      const target = document.getElementById(id);
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const deleteButton = event.target.closest('[data-delete]');
+      if (deleteButton) {
+        await deleteChore(deleteButton.getAttribute('data-kid'), deleteButton.getAttribute('data-chore-id'));
+        return;
+      }
+
+      const completeButton = event.target.closest('[data-complete]');
+      if (completeButton) {
+        await toggleChore(completeButton.getAttribute('data-kid'), completeButton.getAttribute('data-chore-id'));
+        return;
+      }
+
+      const scrollButton = event.target.closest('[data-scroll-target]');
+      if (scrollButton) {
+        const id = scrollButton.getAttribute('data-scroll-target');
+        const target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     function renderHistory() {
@@ -810,32 +863,32 @@
       }).join('');
     }
 
-    function toggleChore(kidId, choreId) {
+    async function toggleChore(kidId, choreId) {
       const kidState = state.kids[kidId];
       const chore = kidState.chores.find(item => item.id === choreId);
-      if (!chore) return;
+      if (!chore || chore.completed) return;
 
-      if (!chore.completed) {
-        chore.completed = true;
-        kidState.balance = roundMoney(kidState.balance + chore.amount);
-        fireConfetti();
-        pulseSection(kidId);
-      }
-
-      saveAndRender();
+      chore.completed = true;
+      kidState.balance = roundMoney(kidState.balance + chore.amount);
+      fireConfetti();
+      pulseSection(kidId);
+      await syncState();
     }
 
-    function deleteChore(kidId, choreId) {
+    async function deleteChore(kidId, choreId) {
       const kidName = KIDS.find(k => k.id === kidId)?.name || 'this child';
       const kidState = state.kids[kidId];
       if (!kidState || !Array.isArray(kidState.chores)) return;
       const chore = kidState.chores.find(item => item.id === choreId);
       if (!chore) return;
+      const okay = confirm(`Remove "${chore.title}" from ${kidName}'s chores? This will only remove the card. It will not change the total.`);
+      if (!okay) return;
+
       kidState.chores = kidState.chores.filter(item => item.id !== choreId);
-      saveAndRender();
+      await syncState();
     }
 
-    function payoutKid(kidId) {
+    async function payoutKid(kidId) {
       const kid = KIDS.find(k => k.id === kidId);
       const kidState = state.kids[kidId];
       if (!kid || !kidState) return;
@@ -844,6 +897,9 @@
         alert(`${kid.name} does not have anything to pay out yet.`);
         return;
       }
+
+      const okay = confirm(`Pay out ${money(amount)} to ${kid.name}? This will reset ${kid.name}'s total to zero everywhere in the app.`);
+      if (!okay) return;
 
       state.payouts.push({
         id: makeId(),
@@ -854,12 +910,27 @@
       });
 
       kidState.balance = 0;
-      saveAndRender();
+      await syncState();
+    }
+
+    async function syncState(fullReplace = false) {
+      const cleanState = hydrateState(state);
+      state = cleanState;
+      try {
+        if (fullReplace) {
+          await set(rootRef, cleanState);
+        } else {
+          await update(rootRef, cleanState);
+        }
+      } catch (error) {
+        console.error(error);
+        alert('Could not save to Firebase. Double-check your database URL and rules.');
+      }
     }
 
     function pulseSection(kidId) {
       const section = document.getElementById(`${kidId}-section`);
-      if (!section) return;
+      if (!section || !section.animate) return;
       section.animate(
         [
           { transform: 'scale(1)', boxShadow: 'var(--shadow)' },
@@ -891,33 +962,12 @@
       }
     }
 
-    function saveAndRender() {
-      saveState();
-      render();
-    }
-
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return loadFreshDefaultState();
-        const parsed = JSON.parse(raw);
-        if (!parsed?.kids) return loadFreshDefaultState();
-        return hydrateState(parsed);
-      } catch {
-        return loadFreshDefaultState();
-      }
-    }
-
     function hydrateState(parsed) {
       const fresh = loadFreshDefaultState();
       KIDS.forEach(kid => {
         const existing = parsed.kids?.[kid.id];
         if (!existing) return;
-        fresh.kids[kid.id].balance = roundMoney(Number(existing.balance ?? existing.balance) || 0);
+        fresh.kids[kid.id].balance = roundMoney(Number(existing.balance) || 0);
         fresh.kids[kid.id].chores = Array.isArray(existing.chores)
           ? existing.chores.map(chore => ({
               id: chore.id || makeId(),
@@ -946,7 +996,7 @@
     }
 
     function roundMoney(value) {
-      return Math.round((value + Number.EPSILON) * 100) / 100;
+      return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
     }
 
     function makeId() {
