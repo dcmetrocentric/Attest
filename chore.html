@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Chore Cash</title>
+  <meta name="theme-color" content="#0f172a" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: rgba(255,255,255,0.86);
+      --text: #162032;
+      --muted: #5a6b85;
+      --line: rgba(22,32,50,0.10);
+      --shadow: 0 18px 38px rgba(19, 33, 68, 0.10);
+      --navy: #0f172a;
+      --blue: #2563eb;
+      --blue-soft: rgba(37,99,235,0.10);
+      --green: #0f9f6e;
+      --gold: #f5b700;
+      --pink: #ec4899;
+      --purple: #7c3aed;
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,0.14), transparent 30%),
+        radial-gradient(circle at top right, rgba(124,58,237,0.12), transparent 25%),
+        linear-gradient(180deg, #edf3ff 0%, #f7f9fc 38%, #f4f7fb 100%);
+      min-height: 100vh;
+    }
+
+    a { color: inherit; }
+
+    .app {
+      width: min(100%, 960px);
+      margin: 0 auto;
+      padding: calc(18px + var(--safe-top)) 16px calc(28px + var(--safe-bottom));
+    }
+
+    .hero {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      margin: 0 0 14px;
+      padding-top: 6px;
+      backdrop-filter: blur(16px);
+    }
+
+    .hero-inner {
+      background: rgba(255,255,255,0.74);
+      border: 1px solid rgba(255,255,255,0.55);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 16px;
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 7vw, 48px);
+      line-height: 0.98;
+      margin: 0;
+      letter-spacing: -0.05em;
+      color: var(--navy);
+    }
+
+    .subhead {
+      margin: 10px 0 16px;
+      font-size: 15px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .jump-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0 20px;
+    }
+
+    .jump-btn {
+      appearance: none;
+      border: 0;
+      width: 100%;
+      border-radius: 24px;
+      padding: 16px 14px;
+      text-align: left;
+      color: white;
+      box-shadow: 0 16px 28px rgba(22,32,50,0.12);
+      font: inherit;
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .jump-btn:active,
+    .primary-btn:active,
+    .ghost-btn:active,
+    .small-btn:active,
+    .task-btn:active { transform: translateY(1px) scale(0.99); }
+
+    .jump-name {
+      display: block;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .jump-topline {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .jump-money {
+      font-size: clamp(24px, 6vw, 32px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .jump-done {
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0.94;
+      white-space: nowrap;
+    }
+
+    .jump-copy {
+      display: block;
+      margin-top: 8px;
+      font-size: 12px;
+      opacity: 0.92;
+    }
+
+    .aidan { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    .nathan { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+    .ellie { background: linear-gradient(135deg, #ec4899, #db2777); }
+
+    .section-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.72);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(14px);
+      scroll-margin-top: 170px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .section-note {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      margin: 2px 0 14px;
+    }
+
+    .task-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .task {
+      border-radius: 20px;
+      background: rgba(255,255,255,0.88);
+      border: 1px solid var(--line);
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.28s ease, filter 0.28s ease, background 0.22s ease;
+    }
+
+    .task.done {
+      opacity: 0.52;
+      filter: saturate(0.72);
+      box-shadow: inset 0 0 0 1px rgba(15,159,110,0.18);
+      background: linear-gradient(180deg, rgba(241, 253, 248, 0.82), rgba(255,255,255,0.84));
+    }
+
+    .task-main {
+      min-width: 0;
+    }
+
+    .task-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .task-title {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      word-break: break-word;
+    }
+
+    .task.done .task-title {
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+      text-decoration-color: rgba(15,159,110,0.7);
+      color: #527065;
+    }
+
+    .task.done .task-meta,
+    .task.done .task-amount {
+      text-decoration: line-through;
+      text-decoration-color: rgba(15,159,110,0.45);
+    }
+
+    .task-amount {
+      font-size: 16px;
+      font-weight: 900;
+      white-space: nowrap;
+      color: var(--green);
+    }
+
+    .task-meta {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .task-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .task-btn, .small-btn, .primary-btn, .ghost-btn {
+      appearance: none;
+      border: 0;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+    }
+
+    .task-btn {
+      min-width: 120px;
+      border-radius: 999px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-weight: 800;
+      color: white;
+      background: linear-gradient(135deg, #0f9f6e, #0c8a60);
+      box-shadow: 0 10px 20px rgba(15,159,110,0.22);
+    }
+
+    .task.done .task-btn {
+      background: linear-gradient(135deg, #ced8d3, #bbc6c0);
+      box-shadow: none;
+      color: #4b5d56;
+    }
+
+    .small-btn {
+      border-radius: 12px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      background: rgba(37,99,235,0.09);
+    }
+
+    .task.done .small-btn { background: rgba(15,159,110,0.10); color: #406157; }
+
+    .primary-btn {
+      width: 100%;
+      border-radius: 18px;
+      padding: 15px 16px;
+      font-size: 15px;
+      font-weight: 800;
+      color: white;
+      background: linear-gradient(135deg, #111827, #0f172a);
+      box-shadow: 0 14px 24px rgba(15,23,42,0.22);
+    }
+
+    .ghost-btn {
+      width: 100%;
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy);
+      background: white;
+      border: 1px solid var(--line);
+    }
+
+    button:disabled {
+      opacity: 0.58;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .admin-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .admin-block {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px;
+    }
+
+    .admin-title {
+      margin: 0 0 10px;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .input, .select {
+      width: 100%;
+      border: 1px solid rgba(22,32,50,0.12);
+      background: rgba(248,250,252,0.95);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 14px 14px;
+      font: inherit;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .input:focus, .select:focus {
+      border-color: rgba(37,99,235,0.38);
+      box-shadow: 0 0 0 4px rgba(37,99,235,0.10);
+      background: white;
+    }
+
+    .inline-two {
+      display: grid;
+      grid-template-columns: 1fr 126px;
+      gap: 10px;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-item {
+      padding: 12px 13px;
+      border-radius: 16px;
+      background: rgba(248,250,252,0.96);
+      border: 1px solid var(--line);
+      font-size: 14px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .history-amount {
+      color: var(--green);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .empty-state {
+      border: 1px dashed rgba(22,32,50,0.18);
+      border-radius: 18px;
+      padding: 18px;
+      font-size: 14px;
+      color: var(--muted);
+      background: rgba(248,250,252,0.78);
+    }
+
+
+    .section-total {
+      margin-top: 14px;
+      border-radius: 20px;
+      padding: 15px 16px;
+      background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.96));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: 0 14px 24px rgba(15,23,42,0.18);
+    }
+
+    .section-total-label {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.78;
+    }
+
+    .section-total-amount {
+      font-size: clamp(24px, 6vw, 32px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    #confetti-layer {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      top: -10vh;
+      width: 12px;
+      height: 18px;
+      border-radius: 4px;
+      opacity: 0.95;
+      animation: fall linear forwards;
+      will-change: transform, opacity;
+    }
+
+    @keyframes fall {
+      0% { transform: translate3d(0, -12vh, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate3d(var(--drift), 115vh, 0) rotate(720deg); opacity: 0; }
+    }
+
+    @media (min-width: 720px) {
+      .admin-grid { grid-template-columns: 1.15fr 0.85fr; }
+      .field-grid.compact { grid-template-columns: 1fr 1fr 150px; align-items: end; }
+    }
+
+    @media (max-width: 700px) {
+      .hero { position: static; }
+      .jump-grid { grid-template-columns: 1fr; }
+      .section-card { scroll-margin-top: 20px; }
+      .task { grid-template-columns: 1fr; }
+      .task-actions { align-items: stretch; }
+      .task-btn, .small-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="confetti-layer" aria-hidden="true"></div>
+  <main class="app">
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="eyebrow">Family chore tracker</div>
+        <h1>Chore Cash</h1>
+        <p class="subhead">Pick a kid, choose a chore, tap complete, and watch the earnings stack up. When it is time to settle up, head to the admin area and pay out the balance.</p>
+
+        <nav class="jump-grid" aria-label="Jump to each child">
+          <button class="jump-btn aidan" data-scroll-target="aidan-section" data-kid-card="aidan" onclick="window.scrollToSectionAction && window.scrollToSectionAction('aidan-section')"></button>
+          <button class="jump-btn nathan" data-scroll-target="nathan-section" data-kid-card="nathan" onclick="window.scrollToSectionAction && window.scrollToSectionAction('nathan-section')"></button>
+          <button class="jump-btn ellie" data-scroll-target="ellie-section" data-kid-card="ellie" onclick="window.scrollToSectionAction && window.scrollToSectionAction('ellie-section')"></button>
+        </nav>
+      </div>
+    </header>
+
+    <section id="kid-sections"></section>
+
+    <section class="section-card" id="admin-section">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow" style="margin-bottom:6px;">Admin</p>
+          <h2 class="section-title" style="font-size:30px;">Manage chores & pay out</h2>
+        </div>
+        <div class="pill">Balances update instantly</div>
+      </div>
+      <p class="section-note">Set up optional chores, adjust payout amounts, and reset earnings after you have paid them.</p>
+
+      <div class="admin-grid">
+        <div class="admin-block">
+          <h3 class="admin-title">Add a chore</h3>
+          <div class="field-grid">
+            <div>
+              <label class="field-label" for="child-select">Child</label>
+              <select id="child-select" class="select"></select>
+            </div>
+            <div>
+              <label class="field-label" for="chore-title">Chore name</label>
+              <input id="chore-title" class="input" type="text" maxlength="60" placeholder="Example: Vacuum the basement" />
+            </div>
+            <div class="inline-two">
+              <div>
+                <label class="field-label" for="chore-amount">Amount</label>
+                <input id="chore-amount" class="input" type="number" min="0" step="0.25" placeholder="5.00" />
+              </div>
+              <div style="display:flex; align-items:end;">
+                <button id="add-chore-btn" class="primary-btn" type="button">Add chore</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-block">
+          <h3 class="admin-title">Pay out balances</h3>
+          <div class="field-grid" id="payout-controls"></div>
+        </div>
+      </div>
+
+      <div class="admin-grid" style="margin-top:16px;">
+        <div class="admin-block">
+          <h3 class="admin-title">Payout history</h3>
+          <div class="history-list" id="history-list"></div>
+        </div>
+        <div class="admin-block">
+          <h3 class="admin-title">Quick reset</h3>
+          <p class="section-note" style="margin-top:0;">Need a fresh start? This clears all completed chores and resets every balance to zero.</p>
+          <button id="reset-all-btn" class="ghost-btn" type="button">Reset all chores and totals</button>
+          <div class="footer-note">Data saves automatically on this device using local storage.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'chore-cash-final-v6';
+    const KIDS = [
+      { id: 'aidan', name: 'Aidan', accent: 'aidan' },
+      { id: 'nathan', name: 'Nathan', accent: 'nathan' },
+      { id: 'ellie', name: 'Ellie', accent: 'ellie' }
+    ];
+
+    const defaultState = {
+      kids: {
+        aidan: {
+          balance: 0,
+          chores: [
+            { id: makeId(), title: 'Take out the trash', amount: 2.00, completed: false },
+            { id: makeId(), title: 'Unload the dishwasher', amount: 2.50, completed: false },
+            { id: makeId(), title: 'Vacuum a room', amount: 4.00, completed: false }
+          ]
+        },
+        nathan: {
+          balance: 0,
+          chores: [
+            { id: makeId(), title: 'Put away clean laundry', amount: 2.00, completed: false },
+            { id: makeId(), title: 'Wipe down counters', amount: 2.50, completed: false },
+            { id: makeId(), title: 'Bring in groceries', amount: 3.00, completed: false }
+          ]
+        },
+        ellie: {
+          balance: 0,
+          chores: [
+            { id: makeId(), title: 'Feed the pet', amount: 1.50, completed: false },
+            { id: makeId(), title: 'Tidy the play area', amount: 2.50, completed: false },
+            { id: makeId(), title: 'Help fold towels', amount: 2.00, completed: false }
+          ]
+        }
+      },
+      payouts: []
+    };
+
+    let state = loadState();
+
+    const kidSectionsEl = document.getElementById('kid-sections');
+    const childSelectEl = document.getElementById('child-select');
+    const choreTitleEl = document.getElementById('chore-title');
+    const choreAmountEl = document.getElementById('chore-amount');
+    const addChoreBtn = document.getElementById('add-chore-btn');
+    const payoutControlsEl = document.getElementById('payout-controls');
+    const historyListEl = document.getElementById('history-list');
+    const resetAllBtn = document.getElementById('reset-all-btn');
+
+    window.payOutKidAction = (kidId) => payoutKid(kidId);
+    window.toggleChoreAction = (kidId, choreId) => toggleChore(kidId, choreId);
+    window.deleteChoreAction = (kidId, choreId) => deleteChore(kidId, choreId);
+    window.scrollToSectionAction = (id) => scrollToSection(id);
+
+    render();
+    wireEvents();
+
+    function wireEvents() {
+      addChoreBtn.addEventListener('click', () => {
+        const childId = childSelectEl.value;
+        const title = choreTitleEl.value.trim();
+        const amount = Number(choreAmountEl.value);
+
+        if (!title) {
+          alert('Please enter a chore name.');
+          return;
+        }
+        if (Number.isNaN(amount) || amount < 0) {
+          alert('Please enter a valid dollar amount.');
+          return;
+        }
+
+        state.kids[childId].chores.unshift({
+          id: makeId(),
+          title,
+          amount: roundMoney(amount),
+          completed: false
+        });
+
+        choreTitleEl.value = '';
+        choreAmountEl.value = '';
+        saveAndRender();
+      });
+
+      resetAllBtn.addEventListener('click', () => {
+        const okay = confirm('Reset every chore and every balance back to zero?');
+        if (!okay) return;
+        state = loadFreshDefaultState();
+        saveAndRender();
+      });
+    }
+
+    function render() {
+      renderJumpCards();
+      renderChildSelect();
+      renderKidSections();
+      renderPayoutControls();
+      renderHistory();
+    }
+
+    function renderJumpCards() {
+      document.querySelectorAll('[data-kid-card]').forEach((button) => {
+        const kidId = button.dataset.kidCard;
+        const kid = KIDS.find(item => item.id === kidId);
+        const kidState = state.kids[kidId];
+        const completedCount = kidState.chores.filter(chore => chore.completed).length;
+        const totalCount = kidState.chores.length;
+
+        button.innerHTML = `
+          <span class="jump-name">${kid.name}</span>
+          <span class="jump-topline">
+            <span class="jump-money">${money(kidState.balance)}</span>
+            <span class="jump-done">${completedCount}/${totalCount} done</span>
+          </span>
+          <span class="jump-copy">Tap to open chores and amounts</span>
+        `;
+      });
+    }
+
+    function renderChildSelect() {
+      const currentValue = childSelectEl.value;
+      childSelectEl.innerHTML = KIDS.map(kid => `<option value="${kid.id}">${kid.name}</option>`).join('');
+      if (currentValue && KIDS.some(kid => kid.id === currentValue)) {
+        childSelectEl.value = currentValue;
+      }
+    }
+
+    function renderKidSections() {
+      kidSectionsEl.innerHTML = '';
+
+      KIDS.forEach((kid) => {
+        const kidState = state.kids[kid.id];
+        const section = document.createElement('section');
+        section.className = 'section-card';
+        section.id = `${kid.id}-section`;
+
+        const choreMarkup = kidState.chores.length
+          ? `<div class="task-list">${kidState.chores.map(chore => choreCard(kid, chore)).join('')}</div>`
+          : `<div class="empty-state">No chores yet for ${kid.name}. Add one in the admin section below.</div>`;
+
+        section.innerHTML = `
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" style="margin-bottom:6px;">${kid.name}'s board</p>
+              <h2 class="section-title">${kid.name}</h2>
+            </div>
+            <div class="pill">Current total: ${money(kidState.balance)}</div>
+          </div>
+          <p class="section-note">Choose any chore you want to do, finish it, and tap complete to claim the money.</p>
+          ${choreMarkup}
+          <div class="section-total" aria-label="${kid.name} cumulative earnings">
+            <div>
+              <div class="section-total-label">Cumulative amount</div>
+              <div style="font-size:13px; opacity:0.78; margin-top:4px;">Completed chores add into this running total until payout.</div>
+            </div>
+            <div class="section-total-amount">${money(kidState.balance)}</div>
+          </div>
+        `;
+
+        kidSectionsEl.appendChild(section);
+      });
+
+    }
+
+    function choreCard(kid, chore) {
+      return `
+        <article class="task ${chore.completed ? 'done' : ''}">
+          <div class="task-main">
+            <div class="task-title-row">
+              <div class="task-title">${escapeHtml(chore.title)}</div>
+              <div class="task-amount">${money(chore.amount)}</div>
+            </div>
+            <div class="task-meta">${chore.completed ? `${money(chore.amount)} added to the cumulative amount.` : 'Optional chore available now.'}</div>
+          </div>
+          <div class="task-actions">
+            <button class="task-btn" type="button" data-complete="true" data-kid="${kid.id}" data-chore-id="${chore.id}" onclick="window.toggleChoreAction && window.toggleChoreAction('${kid.id}', '${chore.id}')">
+              ${chore.completed ? 'Completed' : 'Mark complete'}
+            </button>
+            <button class="small-btn" type="button" data-delete="true" data-kid="${kid.id}" data-chore-id="${chore.id}" onclick="window.deleteChoreAction && window.deleteChoreAction('${kid.id}', '${chore.id}')">Remove</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderPayoutControls() {
+      payoutControlsEl.innerHTML = '';
+      KIDS.forEach((kid) => {
+        const amount = state.kids[kid.id].balance;
+        const wrap = document.createElement('div');
+        wrap.className = 'admin-block';
+        wrap.style.padding = '12px';
+        wrap.innerHTML = `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;">
+            <strong style="font-size:16px;">${kid.name}</strong>
+            <span class="history-amount" style="font-size:18px;">${money(amount)}</span>
+          </div>
+          <button class="primary-btn" type="button" data-payout-kid="${kid.id}" onclick="window.payOutKidAction && window.payOutKidAction('${kid.id}')" ${amount <= 0 ? 'disabled' : ''}>${amount > 0 ? `Pay out ${money(amount)}` : 'Nothing to pay out'}</button>
+        `;
+        payoutControlsEl.appendChild(wrap);
+      });
+
+    }
+
+
+    function scrollToSection(id) {
+      const target = document.getElementById(id);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderHistory() {
+      if (!state.payouts.length) {
+        historyListEl.innerHTML = '<div class="empty-state">No payouts yet. Once you pay someone, it will show here.</div>';
+        return;
+      }
+      historyListEl.innerHTML = state.payouts.slice().reverse().map(item => {
+        return `
+          <div class="history-item">
+            <span>${item.name} paid on ${new Date(item.timestamp).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+            <span class="history-amount">${money(item.amount)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleChore(kidId, choreId) {
+      const kidState = state.kids[kidId];
+      const chore = kidState.chores.find(item => item.id === choreId);
+      if (!chore) return;
+
+      if (!chore.completed) {
+        chore.completed = true;
+        kidState.balance = roundMoney(kidState.balance + chore.amount);
+        fireConfetti();
+        pulseSection(kidId);
+      }
+
+      saveAndRender();
+    }
+
+    function deleteChore(kidId, choreId) {
+      const kidName = KIDS.find(k => k.id === kidId)?.name || 'this child';
+      const kidState = state.kids[kidId];
+      if (!kidState || !Array.isArray(kidState.chores)) return;
+      const chore = kidState.chores.find(item => item.id === choreId);
+      if (!chore) return;
+      kidState.chores = kidState.chores.filter(item => item.id !== choreId);
+      saveAndRender();
+    }
+
+    function payoutKid(kidId) {
+      const kid = KIDS.find(k => k.id === kidId);
+      const kidState = state.kids[kidId];
+      if (!kid || !kidState) return;
+      const amount = roundMoney(Number(kidState.balance) || 0);
+      if (amount <= 0) {
+        alert(`${kid.name} does not have anything to pay out yet.`);
+        return;
+      }
+
+      state.payouts.push({
+        id: makeId(),
+        kidId,
+        name: kid.name,
+        amount,
+        timestamp: new Date().toISOString()
+      });
+
+      kidState.balance = 0;
+      saveAndRender();
+    }
+
+    function pulseSection(kidId) {
+      const section = document.getElementById(`${kidId}-section`);
+      if (!section) return;
+      section.animate(
+        [
+          { transform: 'scale(1)', boxShadow: 'var(--shadow)' },
+          { transform: 'scale(1.01)', boxShadow: '0 20px 46px rgba(15,159,110,0.18)' },
+          { transform: 'scale(1)', boxShadow: 'var(--shadow)' }
+        ],
+        { duration: 500, easing: 'ease-out' }
+      );
+    }
+
+    function fireConfetti() {
+      const layer = document.getElementById('confetti-layer');
+      const count = window.innerWidth < 700 ? 60 : 90;
+      const palette = ['#2563eb', '#0f9f6e', '#f5b700', '#ec4899', '#7c3aed', '#fb7185'];
+
+      for (let i = 0; i < count; i++) {
+        const piece = document.createElement('span');
+        piece.className = 'confetti-piece';
+        const size = 8 + Math.random() * 8;
+        piece.style.left = `${Math.random() * 100}vw`;
+        piece.style.width = `${size}px`;
+        piece.style.height = `${size * 1.45}px`;
+        piece.style.background = palette[Math.floor(Math.random() * palette.length)];
+        piece.style.animationDuration = `${2.2 + Math.random() * 1.7}s`;
+        piece.style.animationDelay = `${Math.random() * 0.15}s`;
+        piece.style.setProperty('--drift', `${-140 + Math.random() * 280}px`);
+        layer.appendChild(piece);
+        piece.addEventListener('animationend', () => piece.remove(), { once: true });
+      }
+    }
+
+    function saveAndRender() {
+      saveState();
+      render();
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return loadFreshDefaultState();
+        const parsed = JSON.parse(raw);
+        if (!parsed?.kids) return loadFreshDefaultState();
+        return hydrateState(parsed);
+      } catch {
+        return loadFreshDefaultState();
+      }
+    }
+
+    function hydrateState(parsed) {
+      const fresh = loadFreshDefaultState();
+      KIDS.forEach(kid => {
+        const existing = parsed.kids?.[kid.id];
+        if (!existing) return;
+        fresh.kids[kid.id].balance = roundMoney(Number(existing.balance ?? existing.balance) || 0);
+        fresh.kids[kid.id].chores = Array.isArray(existing.chores)
+          ? existing.chores.map(chore => ({
+              id: chore.id || makeId(),
+              title: String(chore.title || 'Untitled chore'),
+              amount: roundMoney(Number(chore.amount) || 0),
+              completed: Boolean(chore.completed)
+            }))
+          : [];
+      });
+      fresh.payouts = Array.isArray(parsed.payouts) ? parsed.payouts.map(item => ({
+        id: item.id || makeId(),
+        kidId: String(item.kidId || ''),
+        name: String(item.name || 'Child'),
+        amount: roundMoney(Number(item.amount) || 0),
+        timestamp: item.timestamp || new Date().toISOString()
+      })) : [];
+      return fresh;
+    }
+
+    function loadFreshDefaultState() {
+      return JSON.parse(JSON.stringify(defaultState));
+    }
+
+    function money(value) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0);
+    }
+
+    function roundMoney(value) {
+      return Math.round((value + Number.EPSILON) * 100) / 100;
+    }
+
+    function makeId() {
+      return Math.random().toString(36).slice(2, 11);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+  </script>
+</body>
+</html>
