@@ -15,11 +15,11 @@
       --shadow: 0 18px 38px rgba(19, 33, 68, 0.10);
       --navy: #0f172a;
       --blue: #2563eb;
-      --blue-soft: rgba(37,99,235,0.10);
       --green: #0f9f6e;
       --gold: #f5b700;
       --pink: #ec4899;
       --purple: #7c3aed;
+      --danger: #dc2626;
       --radius-xl: 26px;
       --radius-lg: 20px;
       --radius-md: 16px;
@@ -39,8 +39,6 @@
         linear-gradient(180deg, #edf3ff 0%, #f7f9fc 38%, #f4f7fb 100%);
       min-height: 100vh;
     }
-
-    a { color: inherit; }
 
     .app {
       width: min(100%, 960px);
@@ -89,6 +87,13 @@
       color: var(--muted);
     }
 
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 14px;
+    }
+
     .jump-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -114,7 +119,8 @@
     .primary-btn:active,
     .ghost-btn:active,
     .small-btn:active,
-    .task-btn:active { transform: translateY(1px) scale(0.99); }
+    .task-btn:active,
+    .modal-btn:active { transform: translateY(1px) scale(0.99); }
 
     .jump-name {
       display: block;
@@ -227,9 +233,7 @@
       background: linear-gradient(180deg, rgba(241, 253, 248, 0.82), rgba(255,255,255,0.84));
     }
 
-    .task-main {
-      min-width: 0;
-    }
+    .task-main { min-width: 0; }
 
     .task-title-row {
       display: flex;
@@ -279,7 +283,7 @@
       gap: 8px;
     }
 
-    .task-btn, .small-btn, .primary-btn, .ghost-btn {
+    .task-btn, .small-btn, .primary-btn, .ghost-btn, .modal-btn {
       appearance: none;
       border: 0;
       font: inherit;
@@ -313,8 +317,6 @@
       background: rgba(37,99,235,0.09);
     }
 
-    .task.done .small-btn { background: rgba(15,159,110,0.10); color: #406157; }
-
     .primary-btn {
       width: 100%;
       border-radius: 18px;
@@ -337,6 +339,12 @@
       border: 1px solid var(--line);
     }
 
+    .ghost-btn.warn {
+      color: var(--danger);
+      border-color: rgba(220,38,38,0.18);
+      background: rgba(255,255,255,0.95);
+    }
+
     .admin-grid {
       display: grid;
       gap: 16px;
@@ -356,10 +364,7 @@
       letter-spacing: -0.03em;
     }
 
-    .field-grid {
-      display: grid;
-      gap: 10px;
-    }
+    .field-grid { display: grid; gap: 10px; }
 
     .field-label {
       display: block;
@@ -395,10 +400,7 @@
       gap: 10px;
     }
 
-    .history-list {
-      display: grid;
-      gap: 10px;
-    }
+    .history-list { display: grid; gap: 10px; }
 
     .history-item {
       padding: 12px 13px;
@@ -434,7 +436,6 @@
       background: rgba(248,250,252,0.78);
     }
 
-
     .section-total {
       margin-top: 14px;
       border-radius: 20px;
@@ -464,6 +465,13 @@
       white-space: nowrap;
     }
 
+    .pin-note {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
     #confetti-layer {
       position: fixed;
       inset: 0;
@@ -488,9 +496,78 @@
       100% { transform: translate3d(var(--drift), 115vh, 0) rotate(720deg); opacity: 0; }
     }
 
+    .modal-shell {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 80;
+    }
+
+    .modal-shell.open { display: flex; }
+
+    .modal-card {
+      width: min(100%, 420px);
+      background: rgba(255,255,255,0.97);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 26px;
+      box-shadow: 0 22px 50px rgba(15,23,42,0.22);
+      padding: 18px;
+    }
+
+    .modal-title {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      color: var(--navy);
+    }
+
+    .modal-copy {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .modal-btn {
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .modal-btn.primary {
+      color: white;
+      background: linear-gradient(135deg, #111827, #0f172a);
+    }
+
+    .modal-btn.secondary {
+      color: var(--navy);
+      background: rgba(37,99,235,0.08);
+    }
+
+    .alert {
+      margin-top: 10px;
+      min-height: 18px;
+      font-size: 13px;
+      color: var(--danger);
+      font-weight: 700;
+    }
+
     @media (min-width: 720px) {
       .admin-grid { grid-template-columns: 1.15fr 0.85fr; }
-      .field-grid.compact { grid-template-columns: 1fr 1fr 150px; align-items: end; }
     }
 
     @media (max-width: 700px) {
@@ -500,17 +577,37 @@
       .task { grid-template-columns: 1fr; }
       .task-actions { align-items: stretch; }
       .task-btn, .small-btn { width: 100%; }
+      .modal-actions { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <div id="confetti-layer" aria-hidden="true"></div>
+  <div class="modal-shell" id="pin-modal" aria-hidden="true">
+    <div class="modal-card">
+      <h2 class="modal-title">Admin PIN required</h2>
+      <p class="modal-copy">Enter your family admin PIN to approve payouts and full resets.</p>
+      <label class="field-label" for="admin-pin-input">Admin PIN</label>
+      <input id="admin-pin-input" class="input" type="password" inputmode="numeric" autocomplete="off" placeholder="Enter PIN" />
+      <div class="alert" id="pin-alert"></div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" type="button" id="pin-cancel-btn">Cancel</button>
+        <button class="modal-btn primary" type="button" id="pin-submit-btn">Unlock</button>
+      </div>
+    </div>
+  </div>
+
   <main class="app">
     <header class="hero">
       <div class="hero-inner">
         <div class="eyebrow">Family chore tracker</div>
         <h1>Chore Cash</h1>
-        <p class="subhead">Pick a kid, choose a chore, tap complete, and watch the earnings stack up. When it is time to settle up, head to the admin area and pay out the balance.</p>
+        <p class="subhead">Pick a kid, choose a chore, tap complete, and watch the earnings stack up. Payouts and full resets are protected with your admin PIN.</p>
+
+        <div class="status-row">
+          <div class="pill" id="sync-pill">Connecting…</div>
+          <div class="pill" id="admin-pill">Admin locked</div>
+        </div>
 
         <nav class="jump-grid" aria-label="Jump to each child">
           <button class="jump-btn aidan" data-scroll-target="aidan-section" data-kid-card="aidan"></button>
@@ -528,9 +625,9 @@
           <p class="eyebrow" style="margin-bottom:6px;">Admin</p>
           <h2 class="section-title" style="font-size:30px;">Manage chores & pay out</h2>
         </div>
-        <div class="pill">Balances update instantly</div>
+        <div class="pill">Shared live across devices</div>
       </div>
-      <p class="section-note">Set up optional chores, adjust payout amounts, and reset earnings after you have paid them.</p>
+      <p class="section-note">Add chores for anyone at any time. Payouts and full reset actions require the admin PIN.</p>
 
       <div class="admin-grid">
         <div class="admin-block">
@@ -559,6 +656,7 @@
         <div class="admin-block">
           <h3 class="admin-title">Pay out balances</h3>
           <div class="field-grid" id="payout-controls"></div>
+          <p class="pin-note">Payouts ask for the admin PIN before balances are reset.</p>
         </div>
       </div>
 
@@ -570,26 +668,32 @@
         <div class="admin-block">
           <h3 class="admin-title">Quick reset</h3>
           <p class="section-note" style="margin-top:0;">Need a fresh start? This clears all completed chores and resets every balance to zero.</p>
-          <button id="reset-all-btn" class="ghost-btn" type="button">Reset all chores and totals</button>
-          <div class="footer-note">Data saves automatically on this device using local storage.</div>
+          <button id="reset-all-btn" class="ghost-btn warn" type="button">Reset all chores and balances</button>
+          <div class="footer-note">This app now uses Firebase for shared syncing. No local-only balances.</div>
         </div>
       </div>
     </section>
   </main>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getDatabase, ref, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
+    import { getDatabase, ref, onValue, runTransaction, set, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
 
-    const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyCbK78IaNq_Aws4g2WfZbN1U5n1UAIxprs",
-      authDomain: "chores-app-9924c.firebaseapp.com",
-      databaseURL: "https://chores-app-9924c-default-rtdb.firebaseio.com",
-      projectId: "chores-app-9924c",
-      storageBucket: "chores-app-9924c.firebasestorage.app",
-      messagingSenderId: "686910942510",
-      appId: "1:686910942510:web:0b58494507b91bd5e01ebf"
+    const firebaseConfig = {
+      apiKey: 'AIzaSyCbK78IaNq_Aws4g2WfZbN1U5n1UAIxprs',
+      authDomain: 'chores-app-9924c.firebaseapp.com',
+      databaseURL: 'https://chores-app-9924c-default-rtdb.firebaseio.com',
+      projectId: 'chores-app-9924c',
+      storageBucket: 'chores-app-9924c.firebasestorage.app',
+      messagingSenderId: '686910942510',
+      appId: '1:686910942510:web:0b58494507b91bd5e01ebf',
+      measurementId: 'G-C5Z7Y6RLTC'
     };
+
+    const ADMIN_PIN = '1234';
+    const ADMIN_UNLOCK_MS = 10 * 60 * 1000;
+    const APP_PATH = 'sharedChoreCash';
 
     const KIDS = [
       { id: 'aidan', name: 'Aidan', accent: 'aidan' },
@@ -597,35 +701,10 @@
       { id: 'ellie', name: 'Ellie', accent: 'ellie' }
     ];
 
-    const defaultState = {
-      kids: {
-        aidan: {
-          balance: 0,
-          chores: [
-            { id: makeId(), title: 'Take out the trash', amount: 2.00, completed: false },
-            { id: makeId(), title: 'Unload the dishwasher', amount: 2.50, completed: false },
-            { id: makeId(), title: 'Vacuum a room', amount: 4.00, completed: false }
-          ]
-        },
-        nathan: {
-          balance: 0,
-          chores: [
-            { id: makeId(), title: 'Put away clean laundry', amount: 2.00, completed: false },
-            { id: makeId(), title: 'Wipe down counters', amount: 2.50, completed: false },
-            { id: makeId(), title: 'Bring in groceries', amount: 3.00, completed: false }
-          ]
-        },
-        ellie: {
-          balance: 0,
-          chores: [
-            { id: makeId(), title: 'Feed the dog', amount: 2.00, completed: false },
-            { id: makeId(), title: 'Help fold towels', amount: 2.50, completed: false },
-            { id: makeId(), title: 'Straighten up the living room', amount: 3.00, completed: false }
-          ]
-        }
-      },
-      payouts: []
-    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const boardRef = ref(db, APP_PATH);
 
     const kidSectionsEl = document.getElementById('kid-sections');
     const childSelectEl = document.getElementById('child-select');
@@ -635,88 +714,121 @@
     const payoutControlsEl = document.getElementById('payout-controls');
     const historyListEl = document.getElementById('history-list');
     const resetAllBtn = document.getElementById('reset-all-btn');
-    const footerNote = document.querySelector('.footer-note');
+    const syncPillEl = document.getElementById('sync-pill');
+    const adminPillEl = document.getElementById('admin-pill');
+
+    const pinModalEl = document.getElementById('pin-modal');
+    const pinInputEl = document.getElementById('admin-pin-input');
+    const pinAlertEl = document.getElementById('pin-alert');
+    const pinCancelBtn = document.getElementById('pin-cancel-btn');
+    const pinSubmitBtn = document.getElementById('pin-submit-btn');
 
     let state = loadFreshDefaultState();
-    let isSyncing = true;
+    let currentUser = null;
+    let pendingAdminAction = null;
+    let isReady = false;
+    let adminUnlockedUntil = 0;
 
-    const app = initializeApp(FIREBASE_CONFIG);
-    const db = getDatabase(app);
-    const rootRef = ref(db, 'choreCashFamily');
-
+    attachStaticEvents();
     render();
-    wireEvents();
-    startRealtimeSync();
+    boot();
 
-    async function startRealtimeSync() {
+    async function boot() {
       try {
-        const snap = await get(rootRef);
-        if (!snap.exists()) {
-          await set(rootRef, loadFreshDefaultState());
+        syncPillEl.textContent = 'Signing in…';
+        await signInAnonymously(auth);
+      } catch (error) {
+        console.error(error);
+        syncPillEl.textContent = 'Firebase sign-in failed';
+      }
+
+      onAuthStateChanged(auth, async (user) => {
+        currentUser = user || null;
+        if (!currentUser) {
+          syncPillEl.textContent = 'Signed out';
+          return;
         }
 
-        onValue(rootRef, (snapshot) => {
-          const raw = snapshot.val();
-          state = raw ? hydrateState(raw) : loadFreshDefaultState();
-          isSyncing = false;
-          if (footerNote) footerNote.textContent = 'Shared family data is now syncing through Firebase for everyone.';
+        syncPillEl.textContent = 'Connected';
+
+        onValue(boardRef, async (snapshot) => {
+          const data = snapshot.val();
+          if (!data) {
+            await set(boardRef, loadFreshDefaultState());
+            return;
+          }
+          state = hydrateState(data);
+          isReady = true;
           render();
         }, (error) => {
           console.error(error);
-          isSyncing = false;
-          if (footerNote) footerNote.textContent = 'Firebase sync error. Check your database URL and Firebase rules.';
+          syncPillEl.textContent = 'Sync blocked';
         });
-      } catch (error) {
-        console.error(error);
-        isSyncing = false;
-        if (footerNote) footerNote.textContent = 'Could not connect to Firebase. Check your database URL and publish again.';
-      }
+      });
     }
 
-    function wireEvents() {
-      document.addEventListener('click', handleAppClick);
+    function attachStaticEvents() {
+      document.querySelectorAll('[data-scroll-target]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const target = document.getElementById(button.dataset.scrollTarget);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
 
       addChoreBtn.addEventListener('click', async () => {
-        const childId = childSelectEl.value;
+        const kidId = childSelectEl.value;
         const title = choreTitleEl.value.trim();
         const amount = Number(choreAmountEl.value);
 
-        if (!title) {
-          alert('Please enter a chore name.');
-          return;
-        }
-        if (Number.isNaN(amount) || amount < 0) {
-          alert('Please enter a valid dollar amount.');
+        if (!kidId || !title || Number.isNaN(amount) || amount <= 0) {
+          alert('Add a chore name and a dollar amount greater than zero.');
           return;
         }
 
-        const kidState = state.kids[childId];
-        kidState.chores.unshift({
-          id: makeId(),
-          title,
-          amount: roundMoney(amount),
-          completed: false
+        await updateBoard((draft) => {
+          draft.kids[kidId].chores.push({
+            id: makeId(),
+            title,
+            amount: roundMoney(amount),
+            completed: false
+          });
         });
 
         choreTitleEl.value = '';
         choreAmountEl.value = '';
-        await syncState();
       });
 
       resetAllBtn.addEventListener('click', async () => {
-        const okay = confirm('Reset every chore and every balance back to zero?');
-        if (!okay) return;
-        state = loadFreshDefaultState();
-        await syncState(true);
+        await requestAdminAccess(async () => {
+          const okay = confirm('Reset every chore and every balance back to zero?');
+          if (!okay) return;
+          await set(boardRef, loadFreshDefaultState());
+        });
+      });
+
+      pinCancelBtn.addEventListener('click', closePinModal);
+      pinSubmitBtn.addEventListener('click', handlePinSubmit);
+      pinInputEl.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') handlePinSubmit();
+      });
+      pinModalEl.addEventListener('click', (event) => {
+        if (event.target === pinModalEl) closePinModal();
       });
     }
 
     function render() {
+      renderAdminLockState();
       renderJumpCards();
       renderChildSelect();
       renderKidSections();
       renderPayoutControls();
       renderHistory();
+    }
+
+    function renderAdminLockState() {
+      adminPillEl.textContent = isAdminUnlocked() ? 'Admin unlocked' : 'Admin locked';
+      adminPillEl.style.background = isAdminUnlocked() ? 'rgba(15,159,110,0.10)' : 'rgba(255,255,255,0.9)';
+      adminPillEl.style.color = isAdminUnlocked() ? '#0f9f6e' : '';
     }
 
     function renderJumpCards() {
@@ -730,7 +842,7 @@
         button.innerHTML = `
           <span class="jump-name">${kid.name}</span>
           <span class="jump-topline">
-            <span class="jump-money">${money(kidState.balance)}</span>
+            <span class="jump-money">${money(kidState.earned)}</span>
             <span class="jump-done">${completedCount}/${totalCount} done</span>
           </span>
           <span class="jump-copy">Tap to open chores and amounts</span>
@@ -739,11 +851,9 @@
     }
 
     function renderChildSelect() {
-      const currentValue = childSelectEl.value;
+      const selected = childSelectEl.value;
       childSelectEl.innerHTML = KIDS.map(kid => `<option value="${kid.id}">${kid.name}</option>`).join('');
-      if (currentValue && KIDS.some(kid => kid.id === currentValue)) {
-        childSelectEl.value = currentValue;
-      }
+      if (selected) childSelectEl.value = selected;
     }
 
     function renderKidSections() {
@@ -755,8 +865,9 @@
         section.className = 'section-card';
         section.id = `${kid.id}-section`;
 
-        const choreMarkup = kidState.chores.length
-          ? `<div class="task-list">${kidState.chores.map(chore => choreCard(kid, chore)).join('')}</div>`
+        const chores = kidState.chores;
+        const choreMarkup = chores.length
+          ? `<div class="task-list">${chores.map(chore => choreCard(kid, chore)).join('')}</div>`
           : `<div class="empty-state">No chores yet for ${kid.name}. Add one in the admin section below.</div>`;
 
         section.innerHTML = `
@@ -765,20 +876,28 @@
               <p class="eyebrow" style="margin-bottom:6px;">${kid.name}'s board</p>
               <h2 class="section-title">${kid.name}</h2>
             </div>
-            <div class="pill">Current total: ${money(kidState.balance)}</div>
+            <div class="pill">Earned so far: ${money(kidState.earned)}</div>
           </div>
           <p class="section-note">Choose any chore you want to do, finish it, and tap complete to claim the money.</p>
           ${choreMarkup}
-          <div class="section-total" aria-label="${kid.name} cumulative earnings">
+          <div class="section-total">
             <div>
               <div class="section-total-label">Cumulative amount</div>
-              <div style="font-size:13px; opacity:0.78; margin-top:4px;">Completed chores add into this running total until payout.</div>
+              <div style="font-size:13px; opacity:0.78; margin-top:4px;">This resets only when payout happens.</div>
             </div>
-            <div class="section-total-amount">${money(kidState.balance)}</div>
+            <div class="section-total-amount">${money(kidState.earned)}</div>
           </div>
         `;
 
         kidSectionsEl.appendChild(section);
+      });
+
+      kidSectionsEl.querySelectorAll('[data-complete]').forEach((button) => {
+        button.addEventListener('click', () => toggleChore(button.dataset.kid, button.dataset.choreId));
+      });
+
+      kidSectionsEl.querySelectorAll('[data-delete]').forEach((button) => {
+        button.addEventListener('click', () => deleteChore(button.dataset.kid, button.dataset.choreId));
       });
     }
 
@@ -790,10 +909,10 @@
               <div class="task-title">${escapeHtml(chore.title)}</div>
               <div class="task-amount">${money(chore.amount)}</div>
             </div>
-            <div class="task-meta">${chore.completed ? `${money(chore.amount)} added to the cumulative amount.` : 'Optional chore available now.'}</div>
+            <div class="task-meta">${chore.completed ? 'Completed and counted toward earnings.' : 'Optional chore available now.'}</div>
           </div>
           <div class="task-actions">
-            <button class="task-btn" type="button" data-complete="true" data-kid="${kid.id}" data-chore-id="${chore.id}" ${chore.completed ? 'disabled' : ''}>
+            <button class="task-btn" type="button" data-complete="true" data-kid="${kid.id}" data-chore-id="${chore.id}">
               ${chore.completed ? 'Completed' : 'Mark complete'}
             </button>
             <button class="small-btn" type="button" data-delete="true" data-kid="${kid.id}" data-chore-id="${chore.id}">Remove</button>
@@ -805,7 +924,7 @@
     function renderPayoutControls() {
       payoutControlsEl.innerHTML = '';
       KIDS.forEach((kid) => {
-        const amount = state.kids[kid.id].balance;
+        const amount = state.kids[kid.id].earned;
         const wrap = document.createElement('div');
         wrap.className = 'admin-block';
         wrap.style.padding = '12px';
@@ -814,38 +933,19 @@
             <strong style="font-size:16px;">${kid.name}</strong>
             <span class="history-amount" style="font-size:18px;">${money(amount)}</span>
           </div>
-          <button class="primary-btn" type="button" data-payout-kid="${kid.id}" ${amount <= 0 || isSyncing ? 'disabled' : ''}>${amount > 0 ? `Pay out ${money(amount)}` : 'Nothing to pay out'}</button>
+          <button class="primary-btn" type="button" data-payout-kid="${kid.id}" ${amount > 0 ? '' : 'disabled style="opacity:0.55; cursor:not-allowed;"'}>
+            ${amount > 0 ? `Pay out ${money(amount)}` : 'Nothing to pay out'}
+          </button>
         `;
         payoutControlsEl.appendChild(wrap);
       });
-    }
 
-    async function handleAppClick(event) {
-      const payoutButton = event.target.closest('[data-payout-kid]');
-      if (payoutButton) {
-        if (payoutButton.disabled) return;
-        await payoutKid(payoutButton.getAttribute('data-payout-kid'));
-        return;
-      }
-
-      const deleteButton = event.target.closest('[data-delete]');
-      if (deleteButton) {
-        await deleteChore(deleteButton.getAttribute('data-kid'), deleteButton.getAttribute('data-chore-id'));
-        return;
-      }
-
-      const completeButton = event.target.closest('[data-complete]');
-      if (completeButton) {
-        await toggleChore(completeButton.getAttribute('data-kid'), completeButton.getAttribute('data-chore-id'));
-        return;
-      }
-
-      const scrollButton = event.target.closest('[data-scroll-target]');
-      if (scrollButton) {
-        const id = scrollButton.getAttribute('data-scroll-target');
-        const target = document.getElementById(id);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      payoutControlsEl.querySelectorAll('[data-payout-kid]').forEach((button) => {
+        button.addEventListener('click', async () => {
+          if (button.disabled) return;
+          await requestAdminAccess(() => payoutKid(button.dataset.payoutKid));
+        });
+      });
     }
 
     function renderHistory() {
@@ -853,84 +953,119 @@
         historyListEl.innerHTML = '<div class="empty-state">No payouts yet. Once you pay someone, it will show here.</div>';
         return;
       }
-      historyListEl.innerHTML = state.payouts.slice().reverse().map(item => {
-        return `
-          <div class="history-item">
-            <span>${item.name} paid on ${new Date(item.timestamp).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
-            <span class="history-amount">${money(item.amount)}</span>
-          </div>
-        `;
-      }).join('');
+
+      historyListEl.innerHTML = state.payouts.slice().reverse().map(item => `
+        <div class="history-item">
+          <span>${item.name} paid on ${formatDate(item.timestamp)}</span>
+          <span class="history-amount">${money(item.amount)}</span>
+        </div>
+      `).join('');
     }
 
     async function toggleChore(kidId, choreId) {
-      const kidState = state.kids[kidId];
-      const chore = kidState.chores.find(item => item.id === choreId);
-      if (!chore || chore.completed) return;
-
-      chore.completed = true;
-      kidState.balance = roundMoney(kidState.balance + chore.amount);
+      await updateBoard((draft) => {
+        const chore = draft.kids[kidId].chores.find(item => item.id === choreId);
+        if (!chore || chore.completed) return;
+        chore.completed = true;
+        draft.kids[kidId].earned = roundMoney(draft.kids[kidId].earned + chore.amount);
+      });
       fireConfetti();
       pulseSection(kidId);
-      await syncState();
     }
 
     async function deleteChore(kidId, choreId) {
-      const kidName = KIDS.find(k => k.id === kidId)?.name || 'this child';
-      const kidState = state.kids[kidId];
-      if (!kidState || !Array.isArray(kidState.chores)) return;
-      const chore = kidState.chores.find(item => item.id === choreId);
+      const chore = state.kids[kidId].chores.find(item => item.id === choreId);
       if (!chore) return;
-      const okay = confirm(`Remove "${chore.title}" from ${kidName}'s chores? This will only remove the card. It will not change the total.`);
+      const okay = confirm(`Remove "${chore.title}" from ${KIDS.find(k => k.id === kidId).name}'s chores?`);
       if (!okay) return;
 
-      kidState.chores = kidState.chores.filter(item => item.id !== choreId);
-      await syncState();
+      await updateBoard((draft) => {
+        draft.kids[kidId].chores = draft.kids[kidId].chores.filter(item => item.id !== choreId);
+      });
     }
 
     async function payoutKid(kidId) {
       const kid = KIDS.find(k => k.id === kidId);
-      const kidState = state.kids[kidId];
-      if (!kid || !kidState) return;
-      const amount = roundMoney(Number(kidState.balance) || 0);
-      if (amount <= 0) {
-        alert(`${kid.name} does not have anything to pay out yet.`);
-        return;
-      }
+      const amount = state.kids[kidId].earned;
+      if (!amount) return;
 
-      const okay = confirm(`Pay out ${money(amount)} to ${kid.name}? This will reset ${kid.name}'s total to zero everywhere in the app.`);
+      const okay = confirm(`Pay out ${money(amount)} to ${kid.name}? This will reset ${kid.name}'s balance to zero and reopen all chores.`);
       if (!okay) return;
 
-      state.payouts.push({
-        id: makeId(),
-        kidId,
-        name: kid.name,
-        amount,
-        timestamp: new Date().toISOString()
+      await updateBoard((draft) => {
+        const currentAmount = roundMoney(draft.kids[kidId].earned || 0);
+        if (!currentAmount) return;
+        draft.payouts.push({
+          id: makeId(),
+          kidId,
+          name: kid.name,
+          amount: currentAmount,
+          timestamp: new Date().toISOString()
+        });
+        draft.kids[kidId].earned = 0;
+        draft.kids[kidId].chores = draft.kids[kidId].chores.map(chore => ({ ...chore, completed: false }));
       });
-
-      kidState.balance = 0;
-      await syncState();
     }
 
-    async function syncState(fullReplace = false) {
-      const cleanState = hydrateState(state);
-      state = cleanState;
+    async function updateBoard(mutator) {
+      if (!currentUser) {
+        alert('Still connecting to Firebase. Try again in a moment.');
+        return;
+      }
       try {
-        if (fullReplace) {
-          await set(rootRef, cleanState);
-        } else {
-          await update(rootRef, cleanState);
-        }
+        await runTransaction(boardRef, (current) => {
+          const draft = hydrateState(current || loadFreshDefaultState());
+          mutator(draft);
+          return draft;
+        });
       } catch (error) {
         console.error(error);
-        alert('Could not save to Firebase. Double-check your database URL and rules.');
+        alert('That change could not be saved. Check Firebase rules and refresh the page.');
       }
+    }
+
+    async function requestAdminAccess(action) {
+      if (isAdminUnlocked()) {
+        await action();
+        renderAdminLockState();
+        return;
+      }
+      pendingAdminAction = action;
+      pinAlertEl.textContent = '';
+      pinInputEl.value = '';
+      pinModalEl.classList.add('open');
+      pinModalEl.setAttribute('aria-hidden', 'false');
+      setTimeout(() => pinInputEl.focus(), 30);
+    }
+
+    function handlePinSubmit() {
+      if (pinInputEl.value !== ADMIN_PIN) {
+        pinAlertEl.textContent = 'That PIN did not match.';
+        pinInputEl.select();
+        return;
+      }
+      adminUnlockedUntil = Date.now() + ADMIN_UNLOCK_MS;
+      const action = pendingAdminAction;
+      closePinModal();
+      renderAdminLockState();
+      if (action) action();
+    }
+
+    function closePinModal() {
+      pendingAdminAction = null;
+      pinModalEl.classList.remove('open');
+      pinModalEl.setAttribute('aria-hidden', 'true');
+      pinAlertEl.textContent = '';
+      pinInputEl.value = '';
+    }
+
+    function isAdminUnlocked() {
+      return Date.now() < adminUnlockedUntil;
     }
 
     function pulseSection(kidId) {
       const section = document.getElementById(`${kidId}-section`);
-      if (!section || !section.animate) return;
+      if (!section) return;
       section.animate(
         [
           { transform: 'scale(1)', boxShadow: 'var(--shadow)' },
@@ -945,7 +1080,6 @@
       const layer = document.getElementById('confetti-layer');
       const count = window.innerWidth < 700 ? 60 : 90;
       const palette = ['#2563eb', '#0f9f6e', '#f5b700', '#ec4899', '#7c3aed', '#fb7185'];
-
       for (let i = 0; i < count; i++) {
         const piece = document.createElement('span');
         piece.className = 'confetti-piece';
@@ -962,14 +1096,47 @@
       }
     }
 
-    function hydrateState(parsed) {
+    function loadFreshDefaultState() {
+      return {
+        kids: {
+          aidan: {
+            earned: 0,
+            chores: [
+              { id: makeId(), title: 'Take out the trash', amount: 2.00, completed: false },
+              { id: makeId(), title: 'Unload the dishwasher', amount: 2.50, completed: false },
+              { id: makeId(), title: 'Vacuum a room', amount: 4.00, completed: false }
+            ]
+          },
+          nathan: {
+            earned: 0,
+            chores: [
+              { id: makeId(), title: 'Put away clean laundry', amount: 2.00, completed: false },
+              { id: makeId(), title: 'Wipe down counters', amount: 2.50, completed: false },
+              { id: makeId(), title: 'Bring in groceries', amount: 3.00, completed: false }
+            ]
+          },
+          ellie: {
+            earned: 0,
+            chores: [
+              { id: makeId(), title: 'Feed the pet', amount: 1.50, completed: false },
+              { id: makeId(), title: 'Tidy the play area', amount: 2.50, completed: false },
+              { id: makeId(), title: 'Help fold towels', amount: 2.00, completed: false }
+            ]
+          }
+        },
+        payouts: []
+      };
+    }
+
+    function hydrateState(raw) {
       const fresh = loadFreshDefaultState();
-      KIDS.forEach(kid => {
-        const existing = parsed.kids?.[kid.id];
+      const source = raw || {};
+      KIDS.forEach((kid) => {
+        const existing = source.kids?.[kid.id];
         if (!existing) return;
-        fresh.kids[kid.id].balance = roundMoney(Number(existing.balance) || 0);
+        fresh.kids[kid.id].earned = roundMoney(Number(existing.earned) || 0);
         fresh.kids[kid.id].chores = Array.isArray(existing.chores)
-          ? existing.chores.map(chore => ({
+          ? existing.chores.map((chore) => ({
               id: chore.id || makeId(),
               title: String(chore.title || 'Untitled chore'),
               amount: roundMoney(Number(chore.amount) || 0),
@@ -977,18 +1144,16 @@
             }))
           : [];
       });
-      fresh.payouts = Array.isArray(parsed.payouts) ? parsed.payouts.map(item => ({
-        id: item.id || makeId(),
-        kidId: String(item.kidId || ''),
-        name: String(item.name || 'Child'),
-        amount: roundMoney(Number(item.amount) || 0),
-        timestamp: item.timestamp || new Date().toISOString()
-      })) : [];
+      fresh.payouts = Array.isArray(source.payouts)
+        ? source.payouts.map((item) => ({
+            id: item.id || makeId(),
+            kidId: item.kidId || '',
+            name: String(item.name || 'Unknown'),
+            amount: roundMoney(Number(item.amount) || 0),
+            timestamp: item.timestamp || new Date().toISOString()
+          }))
+        : [];
       return fresh;
-    }
-
-    function loadFreshDefaultState() {
-      return JSON.parse(JSON.stringify(defaultState));
     }
 
     function money(value) {
@@ -997,6 +1162,12 @@
 
     function roundMoney(value) {
       return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+    }
+
+    function formatDate(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return 'Unknown date';
+      return date.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     }
 
     function makeId() {
